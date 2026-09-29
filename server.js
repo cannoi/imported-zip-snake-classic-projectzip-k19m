@@ -1,0 +1,1 @@
+const express = require('express'); const path = require('path'); const app = express(); app.use(express.static('public')); app.get('/health', (req, res) => res.status(200).send('OK')); app.listen(8080, '0.0.0.0', () => console.log('Server running on port 8080'));

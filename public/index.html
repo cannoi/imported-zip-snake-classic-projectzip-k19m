@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <title>Snake Arcade</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .paf-made-by {
+            position: fixed;
+            right: 8px;
+            bottom: 8px;
+            width: min(72px, 12vw);
+            max-width: 12vw;
+            height: auto;
+            object-fit: contain;
+            opacity: .5;
+            background: transparent;
+            padding: 0;
+            border: 0;
+            box-shadow: none;
+            filter: none;
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+<style>.paf-made-by{position:fixed;right:8px;bottom:8px;width:min(72px,12vw);max-width:12vw;height:auto;object-fit:contain;opacity:.5;background:transparent;padding:0;border:0;box-shadow:none;filter:none;pointer-events:none;z-index:30}</style></head>
+<body>
+    <div id="app-container">
+        <header>
+            <div class="score-board">
+                <div class="score-box">
+                    <span class="label">SCORE</span>
+                    <span id="score-display" class="value">0000</span>
+                </div>
+                <div class="score-box">
+                    <span class="label">BEST</span>
+                    <span id="best-score-display" class="value">0000</span>
+                </div>
+            </div>
+            <div id="active-powerup" class="powerup-indicator hidden">
+                <span id="powerup-text">GHOST MODE: 10</span>
+            </div>
+        </header>
+
+        <div id="game-wrapper">
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+            <!-- UI Overlays -->
+            <div id="overlay-container">
+                <!-- Start Screen -->
+                <div id="screen-start" class="screen active">
+                    <h1 class="neon-title">SNAKE ARCADE</h1>
+                    <div class="menu-buttons">
+                        <button class="btn-primary" onclick="startGame()">PLAY GAME</button>
+                        <button class="btn-secondary" onclick="showScreen('screen-skins')">SKINS</button>
+                        <button class="btn-secondary" onclick="showScreen('screen-missions')">MISSIONS</button>
+                        <button class="btn-secondary" onclick="showScreen('screen-settings')">SETTINGS</button>
+                    </div>
+                </div>
+
+                <!-- Skins Screen -->
+                <div id="screen-skins" class="screen">
+                    <h2 class="neon-subtitle">SELECT SKIN</h2>
+                    <div class="skin-grid">
+                        <div class="skin-opt" id="skin-lime" onclick="setSkin('lime')" style="background: #39ff14;"><span class="skin-name">Lime</span></div>
+                        <div class="skin-opt" id="skin-cyan" onclick="setSkin('cyan')" style="background: #00f3ff;"><span class="skin-name">Cyan</span></div>
+                        <div class="skin-opt" id="skin-yellow" onclick="setSkin('yellow')" style="background: #ffea00;"><span class="skin-name">Gold</span></div>
+                        <div class="skin-opt" id="skin-magenta" onclick="setSkin('magenta')" style="background: #ff007f;"><span class="skin-name">Retro</span></div>
+                        <div class="skin-opt" id="skin-rainbow" onclick="setSkin('rainbow')" style="background: linear-gradient(45deg, red, orange, yellow, green, blue, violet);"><span class="skin-name">Rainbow</span></div>
+                    </div>
+                    <button class="btn-back" onclick="showScreen('screen-start')">BACK</button>
+                </div>
+
+                <!-- Missions Screen -->
+                <div id="screen-missions" class="screen">
+                    <h2 class="neon-subtitle">MISSIONS</h2>
+                    <div class="mission-list">
+                        <div class="mission-item" id="mission-score">
+                            <div class="mission-info">
+                                <span class="mission-title">Score 100 Points</span>
+                                <span class="mission-progress" id="prog-score">0 / 100</span>
+                            </div>
+                            <div class="mission-status" id="status-score">❌</div>
+                        </div>
+                        <div class="mission-item" id="mission-gold">
+                            <div class="mission-info">
+                                <span class="mission-title">Eat 5 Golden Apples</span>
+                                <span class="mission-progress" id="prog-gold">0 / 5</span>
+                            </div>
+                            <div class="mission-status" id="status-gold">❌</div>
+                        </div>
+                        <div class="mission-item" id="mission-length">
+                            <div class="mission-info">
+                                <span class="mission-title">Reach Length 20</span>
+                                <span class="mission-progress" id="prog-length">0 / 20</span>
+                            </div>
+                            <div class="mission-status" id="status-length">❌</div>
+                        </div>
+                    </div>
+                    <button class="btn-back" onclick="showScreen('screen-start')">BACK</button>
+                </div>
+
+                <!-- Settings Screen -->
+                <div id="screen-settings" class="screen">
+                    <h2 class="neon-subtitle">SETTINGS</h2>
+                    <div class="settings-form">
+                        <div class="setting-row">
+                            <label for="speedRange">Speed: <span id="speed-val">Normal</span></label>
+                            <input type="range" id="speedRange" min="1" max="3" value="2" oninput="updateSpeedSetting(this.value)">
+                        </div>
+                        <div class="setting-row">
+                            <label>Sound Effects</label>
+                            <input type="checkbox" id="soundToggle" checked onchange="toggleSound(this.checked)">
+                        </div>
+                        <div class="setting-row">
+                            <label>Vibration</label>
+                            <input type="checkbox" id="vibrateToggle" checked onchange="toggleVibration(this.checked)">
+                        </div>
+                    </div>
+                    <button class="btn-back" onclick="showScreen('screen-start')">BACK</button>
+                </div>
+
+                <!-- Game Over Screen -->
+                <div id="screen-gameover" class="screen">
+                    <h2 class="neon-title text-red">GAME OVER</h2>
+                    <div class="stats-summary">
+                        <p>Final Score: <span id="final-score" class="text-neon">0</span></p>
+                        <p>Best Score: <span id="best-score" class="text-gold">0</span></p>
+                    </div>
+                    <div class="menu-buttons">
+                        <button class="btn-primary" onclick="startGame()">PLAY AGAIN</button>
+                        <button class="btn-secondary" onclick="showScreen('screen-start')">MAIN MENU</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Touch Controls -->
+        <div class="controls-container">
+            <div class="dpad">
+                <button id="btn-up" class="dpad-btn up">▲</button>
+                <button id="btn-left" class="dpad-btn left">◀</button>
+                <div class="dpad-center"></div>
+                <button id="btn-right" class="dpad-btn right">▶</button>
+                <button id="btn-down" class="dpad-btn down">▼</button>
+            </div>
+        </div>
+
+        <!-- Notification Toast -->
+        <div id="toast" class="toast hidden"></div>
+    </div>
+
+    
+    <script src="game.js"></script>
+<img class="paf-made-by" src="/made-by.png" alt="Made with App Builder — Pi SoloHost"></body>
+</html>
