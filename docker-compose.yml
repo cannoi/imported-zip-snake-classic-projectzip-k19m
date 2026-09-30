@@ -1,8 +1,16 @@
 services:
   app:
-    image: paf-app:snake-classic
+    build: .
+    image: snake-arcade:2.8.1
     restart: unless-stopped
-    labels:
-      pi.ui.primary: "true"
+    env_file: .env
     ports:
-      - "127.0.0.1:18080:8080"
+      - "${HOST_PORT:-8080}:8080"   # 0.0.0.0 để các máy trong LAN truy cập được
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

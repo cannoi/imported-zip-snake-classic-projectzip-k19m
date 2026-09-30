@@ -5,3 +5,4 @@ artifacts/
 data/
 *.db
 .git/
+.ai-kernel-sticky.json

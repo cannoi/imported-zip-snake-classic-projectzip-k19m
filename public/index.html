@@ -1,157 +1,144 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
-    <title>Snake Arcade</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        .paf-made-by {
-            position: fixed;
-            right: 8px;
-            bottom: 8px;
-            width: min(72px, 12vw);
-            max-width: 12vw;
-            height: auto;
-            object-fit: contain;
-            opacity: .5;
-            background: transparent;
-            padding: 0;
-            border: 0;
-            box-shadow: none;
-            filter: none;
-            pointer-events: none;
-            z-index: 100;
-        }
-    </style>
-<style>.paf-made-by{position:fixed;right:8px;bottom:8px;width:min(72px,12vw);max-width:12vw;height:auto;object-fit:contain;opacity:.5;background:transparent;padding:0;border:0;box-shadow:none;filter:none;pointer-events:none;z-index:30}</style></head>
-<body>
-    <div id="app-container">
-        <header>
-            <div class="score-board">
-                <div class="score-box">
-                    <span class="label">SCORE</span>
-                    <span id="score-display" class="value">0000</span>
-                </div>
-                <div class="score-box">
-                    <span class="label">BEST</span>
-                    <span id="best-score-display" class="value">0000</span>
-                </div>
-            </div>
-            <div id="active-powerup" class="powerup-indicator hidden">
-                <span id="powerup-text">GHOST MODE: 10</span>
-            </div>
-        </header>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
+<title>Snake Arcade</title><link rel="stylesheet" href="style.css"></head>
+<body><div id="net"></div><button id="gear" aria-label="Settings">⚙</button><button id="chat-btn" aria-label="Chat">💬</button>
+<div id="app-container">
+<header><div class="score-board">
+<div class="score-box"><span class="label" data-i18n="score">SCORE</span><span id="score-display" class="value">0</span></div>
+<div class="score-box"><span class="label" id="info-label">ROOM</span><span id="info-display" class="value">-</span></div></div>
+<div id="active-powerup" class="powerup-indicator hidden"><span id="powerup-text"></span></div></header>
+<div id="game-wrapper"><canvas id="gameCanvas" width="600" height="600"></canvas><div id="game-chat"></div>
+<div id="overlay-container">
+<div id="screen-menu" class="screen active scroll">
+ <h1 class="neon-title">SNAKE ARCADE</h1>
+ <div class="row"><button class="btn-secondary lang-btn" id="lang-en">EN</button><button class="btn-secondary lang-btn" id="lang-vi">VI</button></div>
+ <input id="name" maxlength="12" placeholder="Name" class="field" data-ph="namePh">
+ <div class="row"><input type="color" id="color"><div id="swatches" class="row"></div></div>
+ <select id="skin" class="field">
+  <option value="solid" data-i18n="skinSolid">Skin: Solid</option>
+  <option value="gradient" data-i18n="skinGrad">Skin: Fade</option>
+  <option value="dots" data-i18n="skinDots">Skin: Dots</option>
+  <option value="stripes" data-i18n="skinStripes">Skin: Stripes</option>
+  <option value="glow" data-i18n="skinGlow">Skin: Neon</option>
+  <option value="rainbow" data-i18n="skinRainbow">Skin: Rainbow</option>
+ </select>
+ <label class="row"><input type="checkbox" id="snd" checked> <span data-i18n="sound">Sound</span></label>
+ <button class="btn-primary" id="b-solo" data-i18n="quickPlay">QUICK PLAY (1P)</button>
+ <button class="btn-secondary" id="b-custom" data-i18n="soloMode">SOLO / PICK MODE</button>
+ <button class="btn-secondary" id="b-create" data-i18n="createRoom">CREATE MULTIPLAYER ROOM</button>
+ <div class="row"><input id="code" maxlength="4" placeholder="CODE" class="field short" data-ph="codePh"><button class="btn-secondary" id="b-join" data-i18n="joinRoom">JOIN</button></div>
+ <div class="row"><button class="btn-secondary" id="b-help" data-i18n="howTo">HOW TO PLAY</button><button class="btn-secondary" id="b-conn" data-i18n="lanBtn">LAN CONNECT</button></div>
+ <div id="rooms" class="row"></div><p id="err" class="text-red"></p></div>
+<div id="screen-lobby" class="screen scroll">
+ <h2 class="neon-subtitle"><span data-i18n="room">ROOM</span> <span id="l-code"></span></h2>
+ <div class="row"><select id="mode" class="field">
+  <option value="coop" data-i18n="modeCoop">Co-op</option>
+  <option value="survival" data-i18n="modeSurv">Survival</option>
+  <option value="timeattack" data-i18n="modeTime">Time Attack</option>
+  <option value="levels" data-i18n="modeLevels">Campaign</option>
+ </select>
+ <select id="map" class="field">
+  <option value="open">Open Field</option>
+  <option value="box">The Box</option>
+  <option value="maze">Labyrinth</option>
+  <option value="portal">Portal Gate</option>
+  <option value="plus">Crossroads</option>
+  <option value="ring">The Arena</option>
+  <option value="lanes">Highway</option>
+  <option value="islands">Islands</option>
+  <option value="spiral">Spiral Pit</option>
+  <option value="diamond">Diamond</option>
+  <option value="forest">Pixel Forest</option>
+  <option value="corners">Four Corners</option>
+  <option value="checker">Checkers</option>
+  <option value="twin">Twin Halls</option>
+  <option value="spikes">Spike Field</option>
+  <option value="mudflats">Mud Flats</option>
+  <option value="turbo">Turbo Track</option>
+  <option value="gates">Clockwork Gates</option>
+  <option value="snowflake">Snowflake</option>
+  <option value="bridges">Spike River</option>
+  <option value="pinball">Pinball</option>
+  <option value="zigzag">Zigzag Hall</option>
+  <option value="octagon">Octagon</option>
+  <option value="volcano">Volcano</option>
+  <option value="random">🎲 Random</option>
+ </select></div>
+ <select id="diff" class="field">
+  <option value="easy" data-i18n="diffEasy">Easy</option>
+  <option value="normal" data-i18n="diffNorm">Normal</option>
+  <option value="fast" data-i18n="diffHard">Hard</option>
+ </select>
+ <p id="modeinfo" class="small"></p>
+ <div id="level-preview" class="level-preview"></div>
+ <ul id="plist"></ul><div class="row"><button class="btn-secondary" id="b-bot">+ BOT</button><button class="btn-secondary" id="b-unbot">− BOT</button></div><p id="share"></p>
+ <div id="invite-box" class="invite-box">
+  <div class="qr-card"><img id="qr-public" alt="Public QR"><div class="small">WAN / PLAY</div></div>
+  <div class="qr-card"><img id="qr-lan" alt="LAN QR"><div class="small">LAN / Wi-Fi</div></div>
+ </div>
+ <p id="l-best"></p>
+ <div class="row"><input id="bet-target" class="field" maxlength="12" placeholder="Bet on name"><input id="bet-amt" class="field short" value="10"><button class="btn-secondary" id="b-bet">BET</button></div>
+ <div id="chat-box" class="chat-box"><div id="chat-log"></div>
+  <div class="row"><input id="chat-in" class="field" maxlength="160" placeholder="Room chat · @ai"><button class="btn-secondary" id="chat-send">SEND</button></div></div>
 
-        <div id="game-wrapper">
-            <canvas id="gameCanvas" width="400" height="400"></canvas>
-
-            <!-- UI Overlays -->
-            <div id="overlay-container">
-                <!-- Start Screen -->
-                <div id="screen-start" class="screen active">
-                    <h1 class="neon-title">SNAKE ARCADE</h1>
-                    <div class="menu-buttons">
-                        <button class="btn-primary" onclick="startGame()">PLAY GAME</button>
-                        <button class="btn-secondary" onclick="showScreen('screen-skins')">SKINS</button>
-                        <button class="btn-secondary" onclick="showScreen('screen-missions')">MISSIONS</button>
-                        <button class="btn-secondary" onclick="showScreen('screen-settings')">SETTINGS</button>
-                    </div>
-                </div>
-
-                <!-- Skins Screen -->
-                <div id="screen-skins" class="screen">
-                    <h2 class="neon-subtitle">SELECT SKIN</h2>
-                    <div class="skin-grid">
-                        <div class="skin-opt" id="skin-lime" onclick="setSkin('lime')" style="background: #39ff14;"><span class="skin-name">Lime</span></div>
-                        <div class="skin-opt" id="skin-cyan" onclick="setSkin('cyan')" style="background: #00f3ff;"><span class="skin-name">Cyan</span></div>
-                        <div class="skin-opt" id="skin-yellow" onclick="setSkin('yellow')" style="background: #ffea00;"><span class="skin-name">Gold</span></div>
-                        <div class="skin-opt" id="skin-magenta" onclick="setSkin('magenta')" style="background: #ff007f;"><span class="skin-name">Retro</span></div>
-                        <div class="skin-opt" id="skin-rainbow" onclick="setSkin('rainbow')" style="background: linear-gradient(45deg, red, orange, yellow, green, blue, violet);"><span class="skin-name">Rainbow</span></div>
-                    </div>
-                    <button class="btn-back" onclick="showScreen('screen-start')">BACK</button>
-                </div>
-
-                <!-- Missions Screen -->
-                <div id="screen-missions" class="screen">
-                    <h2 class="neon-subtitle">MISSIONS</h2>
-                    <div class="mission-list">
-                        <div class="mission-item" id="mission-score">
-                            <div class="mission-info">
-                                <span class="mission-title">Score 100 Points</span>
-                                <span class="mission-progress" id="prog-score">0 / 100</span>
-                            </div>
-                            <div class="mission-status" id="status-score">❌</div>
-                        </div>
-                        <div class="mission-item" id="mission-gold">
-                            <div class="mission-info">
-                                <span class="mission-title">Eat 5 Golden Apples</span>
-                                <span class="mission-progress" id="prog-gold">0 / 5</span>
-                            </div>
-                            <div class="mission-status" id="status-gold">❌</div>
-                        </div>
-                        <div class="mission-item" id="mission-length">
-                            <div class="mission-info">
-                                <span class="mission-title">Reach Length 20</span>
-                                <span class="mission-progress" id="prog-length">0 / 20</span>
-                            </div>
-                            <div class="mission-status" id="status-length">❌</div>
-                        </div>
-                    </div>
-                    <button class="btn-back" onclick="showScreen('screen-start')">BACK</button>
-                </div>
-
-                <!-- Settings Screen -->
-                <div id="screen-settings" class="screen">
-                    <h2 class="neon-subtitle">SETTINGS</h2>
-                    <div class="settings-form">
-                        <div class="setting-row">
-                            <label for="speedRange">Speed: <span id="speed-val">Normal</span></label>
-                            <input type="range" id="speedRange" min="1" max="3" value="2" oninput="updateSpeedSetting(this.value)">
-                        </div>
-                        <div class="setting-row">
-                            <label>Sound Effects</label>
-                            <input type="checkbox" id="soundToggle" checked onchange="toggleSound(this.checked)">
-                        </div>
-                        <div class="setting-row">
-                            <label>Vibration</label>
-                            <input type="checkbox" id="vibrateToggle" checked onchange="toggleVibration(this.checked)">
-                        </div>
-                    </div>
-                    <button class="btn-back" onclick="showScreen('screen-start')">BACK</button>
-                </div>
-
-                <!-- Game Over Screen -->
-                <div id="screen-gameover" class="screen">
-                    <h2 class="neon-title text-red">GAME OVER</h2>
-                    <div class="stats-summary">
-                        <p>Final Score: <span id="final-score" class="text-neon">0</span></p>
-                        <p>Best Score: <span id="best-score" class="text-gold">0</span></p>
-                    </div>
-                    <div class="menu-buttons">
-                        <button class="btn-primary" onclick="startGame()">PLAY AGAIN</button>
-                        <button class="btn-secondary" onclick="showScreen('screen-start')">MAIN MENU</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Touch Controls -->
-        <div class="controls-container">
-            <div class="dpad">
-                <button id="btn-up" class="dpad-btn up">▲</button>
-                <button id="btn-left" class="dpad-btn left">◀</button>
-                <div class="dpad-center"></div>
-                <button id="btn-right" class="dpad-btn right">▶</button>
-                <button id="btn-down" class="dpad-btn down">▼</button>
-            </div>
-        </div>
-
-        <!-- Notification Toast -->
-        <div id="toast" class="toast hidden"></div>
-    </div>
-
-    
-    <script src="game.js"></script>
-<img class="paf-made-by" src="/made-by.png" alt="Made with App Builder — Pi SoloHost"></body>
-</html>
+ <button class="btn-primary" id="b-start" data-i18n="start">START</button>
+ <button class="btn-back" id="b-leave" data-i18n="leave">LEAVE ROOM</button></div>
+<div id="screen-settings" class="screen scroll">
+ <h2 class="neon-subtitle" data-i18n="settings">SETTINGS</h2>
+ <div class="row"><button class="btn-secondary lang-btn" id="s-lang-en">EN</button><button class="btn-secondary lang-btn" id="s-lang-vi">VI</button></div>
+ <input id="s-name" maxlength="12" class="field" placeholder="Name" data-ph="namePh">
+ <div class="row"><input type="color" id="s-color"><select id="s-skin" class="field"></select></div>
+ <label class="row"><input type="checkbox" id="s-snd"> <span data-i18n="sound">Sound</span></label>
+ <label class="row"><input type="checkbox" id="s-vib"> <span data-i18n="vibrate">Vibrate (phone)</span></label>
+ <label class="row"><input type="checkbox" id="s-chat"> <span data-i18n="chatOverlay">Show chat on screen</span></label>
+ <div id="s-room" class="small"></div><ul id="s-plist"></ul>
+ <div class="row"><button class="btn-secondary" id="s-copy" data-i18n="copyInvite">COPY INVITE LINK</button><button class="btn-secondary" id="s-pause" data-i18n="pause">PAUSE</button><button class="btn-secondary" id="s-full" data-i18n="fullscreen">FULLSCREEN</button></div>
+ <div class="row"><button class="btn-secondary" id="s-help" data-i18n="howTo">HOW TO PLAY</button><button class="btn-secondary" id="s-conn" data-i18n="lanBtn">LAN CONNECT</button></div>
+ <button class="btn-primary" id="s-close" data-i18n="continue">CONTINUE</button><button class="btn-back" id="s-leave" data-i18n="leave">LEAVE ROOM</button></div>
+<div id="screen-help" class="screen scroll">
+ <h2 class="neon-subtitle" data-i18n="helpTitle">HOW TO PLAY</h2>
+ <div class="doc" id="help-body"></div>
+ <button class="btn-primary" id="h-close" data-i18n="gotIt">GOT IT</button></div>
+<div id="screen-connect" class="screen scroll">
+ <h2 class="neon-subtitle" data-i18n="lanTitle">LAN CONNECT</h2>
+ <div class="doc"><p data-i18n="lanIntro">Open this URL on phones/TVs on the same Wi-Fi as the host:</p><div id="c-urls"></div><div id="c-qrs" class="invite-box"></div>
+ <div id="lan-steps"></div></div>
+ <button class="btn-primary" id="c-close" data-i18n="close">CLOSE</button></div>
+<div id="screen-over" class="screen scroll">
+ <h2 class="neon-title text-red" data-i18n="gameOver">GAME OVER</h2><ul id="results"></ul><p id="o-best"></p>
+ <button class="btn-primary" id="b-replay" data-i18n="playAgain">PLAY AGAIN</button>
+ <button class="btn-secondary" id="b-again" data-i18n="backLobby">BACK TO ROOM</button><button class="btn-back" id="b-menu" data-i18n="backMenu">MAIN MENU</button></div>
+</div></div>
+<div class="controls-container"><div class="dpad">
+<button id="btn-up" class="dpad-btn up">▲</button><button id="btn-left" class="dpad-btn left">◀</button><div class="dpad-center"></div>
+<button id="btn-right" class="dpad-btn right">▶</button><button id="btn-down" class="dpad-btn down">▼</button></div></div>
+</div>
+<div id="chat-bar" class="chat-bar"><div id="emotes"></div>
+ <div class="row"><input id="gc-in" class="field" maxlength="160" placeholder="Chat · @ai" data-ph="chatPh"><button type="button" id="gc-send" class="btn-secondary" data-i18n="send">SEND</button></div></div>
+<div id="ai-box">
+  <button type="button" id="ai-toggle" title="AI referee"><img id="ai-icon" src="ai-icon.png" alt="AI"></button>
+  <div id="ai-panel">
+    <div class="ai-head"><span id="ai-chip" class="ai-chip">…</span><button type="button" id="ai-key-btn" class="btn-secondary" data-i18n="aiKeyBtn">🔑 KEY</button></div>
+    <div id="ai-log"></div>
+    <div class="row"><input id="ai-in" class="field" maxlength="200" placeholder="Ask referee…" data-ph="aiAsk"><button type="button" id="ai-send" class="btn-secondary" data-i18n="send">SEND</button></div>
+  </div>
+</div>
+<div id="ai-modal" role="dialog" aria-modal="true"><div class="ai-card">
+  <h3 data-i18n="aiKeyTitle">AI TOKEN</h3>
+  <p class="small" data-i18n="aiKeyHelp">Choose a provider. Leave model empty to let AI test and choose a working model automatically. Local AI can work without a cloud token.</p>
+  <select id="ai-provider" class="field" aria-label="AI provider">
+    <option value="auto">Auto / Detect from token</option>
+    <option value="openai">OpenAI</option><option value="deepseek">DeepSeek</option><option value="groq">Groq</option>
+    <option value="openrouter">OpenRouter</option><option value="mistral">Mistral</option><option value="xai">xAI</option>
+    <option value="gemini">Google Gemini</option><option value="ollama">Ollama (local)</option>
+    <option value="lmstudio">LM Studio (local)</option><option value="local">Local OpenAI-compatible</option><option value="custom">Custom</option>
+  </select>
+  <input id="ai-model" class="field" maxlength="200" placeholder="Model (optional — auto if empty)" data-ph="aiModel" autocomplete="off">
+  <input id="ai-token" class="field" type="password" maxlength="300" placeholder="API key / token (not required for local AI)" data-ph="aiToken" autocomplete="off">
+  <input id="ai-base-url" class="field" maxlength="500" placeholder="Local / custom Base URL (optional)" data-ph="aiBaseUrl" autocomplete="off">
+  <input id="ai-pin" class="field" type="password" maxlength="40" placeholder="Admin PIN" data-ph="aiPin" autocomplete="off" style="display:none">
+  <p id="ai-msg" class="small"></p>
+  <div class="row"><button type="button" id="ai-save" class="btn-primary" data-i18n="aiSave">SAVE &amp; TEST</button><button type="button" id="ai-remove" class="btn-secondary" data-i18n="aiRemove">REMOVE KEY</button><button type="button" id="ai-cancel" class="btn-back" data-i18n="cancel">CANCEL</button></div>
+</div></div>
+<script src="/socket.io/socket.io.js"></script><script src="communication-pause.js"></script><script src="game.js"></script></body></html>

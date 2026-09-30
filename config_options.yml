@@ -1,6 +1,6 @@
-title: "Snake Classic"
+title: "imported-zip-snake-classic-projectzip"
 eyebrow: SoloHost App
-description: "Create a simple mobile Snake game.  - Classic snake gameplay: move, eat food, grow longer. - Swipe controls and optional on-screen arrows. - Collision with walls or the snake ends the game. - Score and high score. - Star"
+description: "Upgrade existing GitHub app: cannoi/imported-zip-snake-classic-projectzip"
 footer_hint: Ready to run on Pi Desktop SoloHost.
 output_file: .env
 after_save: Saved. Start the app from SoloHost.
