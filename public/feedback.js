@@ -56,7 +56,19 @@
     box.style.display = 'block';
     const h = document.createElement('b'); h.textContent = t('fbDonate'); box.appendChild(h);
     if (nudge) { const p = document.createElement('div'); p.className = 'small'; p.textContent = t('fbNudge'); box.appendChild(p); }
-    rows.slice(0, 8).forEach(([k, v]) => { const p = document.createElement('div'); p.className = 'small'; p.textContent = k + ': ' + v; box.appendChild(p); });
+    rows.slice(0, 8).forEach(([k, v]) => {
+      const row = document.createElement('div'); row.className = 'fb-row';
+      const lab = document.createElement('span'); lab.className = 'fb-k'; lab.textContent = k;
+      const val = document.createElement('code'); val.className = 'fb-val'; val.textContent = v; val.title = v;
+      row.appendChild(lab); row.appendChild(val);
+      const acc = /\d{6,}/.test(String(v).replace(/\s/g,'')) || String(v).length >= 8;
+      if (acc) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'btn-secondary fb-copy'; b.textContent = 'COPY';
+        b.onclick = () => { if (typeof copyText === 'function') copyText(String(v)); else { try { navigator.clipboard.writeText(String(v)); } catch (e) {} } };
+        row.appendChild(b);
+      }
+      box.appendChild(row);
+    });
     if (rows.length && pay !== 'free' && pay !== 'waived') { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn-secondary'; b.textContent = t('fbPaid'); b.onclick = () => openModal(true); box.appendChild(b); }
   }
   function refreshUi() {

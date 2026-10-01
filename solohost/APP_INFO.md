@@ -1,9 +1,14 @@
-# Snake Classic
+# Snake Arcade
 
-Suggested app name: Snake Classic
-Suggested description: Snake Classic: Create a simple mobile Snake game.  - Classic snake gameplay: move, eat food, grow longer. - Swipe controls and optional on-screen arrows. -…
+App ID: imported-zip-snake-classic-projectzip-k19m
+Feedback Hub appId: snake-arcade
+
+Suggested app name: Snake Arcade
+Suggested description: LAN multiplayer Snake for Pi SoloHost. Same-Wi-Fi rooms, QR invite, AI referee.
 
 Docker image:
-paf-app:snake-classic
+ghcr.io/cannoi/imported-zip-snake-classic-projectzip-k19m:latest
 
-Do not install until this image address exists on GHCR.
+Install with the two files in this folder:
+- docker-compose.yml
+- config_options.yml

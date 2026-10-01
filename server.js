@@ -313,13 +313,29 @@ app.get('/api/shfh-config', (req, res) => {
     appId: process.env.SHFH_APP_ID || 'snake-arcade', appName: process.env.SHFH_APP_NAME || 'Snake Arcade', version: APP_VERSION, platform: 'solohost', enabled: process.env.SHFH_ENABLED !== '0' });
 });
 let publicIp = '';
+let advertisedPort = '';   // last public/host port seen on a real request (SoloHost), NEVER the internal container PORT
+const APP_ID = process.env.SHFH_APP_ID || process.env.APP_ID || 'imported-zip-snake-classic-projectzip-k19m';
 function lanIps() {
   return Object.values(os.networkInterfaces()).flat().filter(i => i && (i.family === 'IPv4' || i.family === 4) && !i.internal).map(i => i.address);
 }
+function rememberPublicPort(headers) {
+  if (!headers) return advertisedPort;
+  const get = k => {
+    if (typeof headers.get === 'function') return headers.get(k) || headers.get(k.toLowerCase()) || '';
+    return headers[k] || headers[k.toLowerCase()] || '';
+  };
+  const xf = String(get('x-forwarded-port') || '').split(',')[0].trim();
+  const host = String(get('x-forwarded-host') || get('host') || '').split(',')[0].trim();
+  const fromHost = (host.match(/:(\d+)$/) || [])[1] || '';
+  const p = xf || fromHost;
+  if (p) advertisedPort = p;
+  return advertisedPort;
+}
 function hostInfo(req) {
   const ips = lanIps();
+  if (req) rememberPublicPort(req);
   const host = req ? String(req.get('x-forwarded-host') || req.get('host') || '').split(',')[0].trim() : '';
-  const port = (host.match(/:(\d+)$/) || [])[1] || (req ? '' : String(PORT));   // public port = whatever port the browser used (SoloHost may assign any)
+  const port = advertisedPort;   // SoloHost-assigned public port only; do not fall back to internal 8080
   const proto = req ? String(req.get('x-forwarded-proto') || req.protocol || 'http').split(',')[0].trim() : 'http';
   const reqUrl = host && !/^(localhost|127\.)/.test(host) ? proto + '://' + host : '';
   const publicUrl = PUBLIC_URL || reqUrl || ((publicIp && port) ? ('http://' + publicIp + ':' + port) : '');
@@ -328,7 +344,7 @@ function hostInfo(req) {
   if (publicUrl) urls.push(publicUrl);
   lanUrls.forEach(u => { if (!urls.includes(u)) urls.push(u); });
   if (reqUrl && !urls.includes(reqUrl)) urls.push(reqUrl);
-  return { port: PORT, hostPort: port ? +port : null, publicIp, publicUrl, lanUrls, ips, urls, url: publicUrl };
+  return { port: PORT, hostPort: port ? +port : null, publicIp, publicUrl, lanUrls, ips, urls, url: publicUrl, appId: APP_ID };
 }
 async function refreshPublicIp() {
   for (const u of ['https://api.ipify.org', 'https://ipv4.icanhazip.com', 'https://ifconfig.me/ip']) {
@@ -355,6 +371,7 @@ function rehost(room) { const on = humansOf(room).filter(p => !p.off); if (on.le
 const newPlayer = (id, prof) => ({ id, ...clean(prof), sock: null, off: 0, alive: false, body: [], score: 0, chips: 100, slot: 0, dir: [1, 0], nd: [1, 0], cd: 1, grow: 0, speed: 0, respawnAt: 0 });
 
 io.on('connection', sock => {
+  rememberPublicPort(sock.handshake && sock.handshake.headers);
   let r = null, pid = null, bucket = { n: 0, t: Date.now() };
   const ok = max => { const now = Date.now(); if (now - bucket.t > 1000) bucket = { n: 0, t: now }; return ++bucket.n <= max; };  // giới hạn tốc độ
   const fn = cb => typeof cb === 'function' ? cb : () => {};

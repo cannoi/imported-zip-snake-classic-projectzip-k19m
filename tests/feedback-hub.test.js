@@ -67,9 +67,13 @@ const cfgBase = { hubUrl: 'http://14.176.78.46:8090', formUrl: 'http://14.176.78
   { const snap = { payment: { state: 'unpaid' }, update: { needed: true, item: { id: 77, version: '3.0.0', title: 'New maps' } }, actions: ['update', 'unpaid_nudge'], donate: { pi: { address: 'GABC123', note: 'Pi wallet' }, mb: { account: '0123456789' }, nested: { deep: { x: 'ignored' } } } };
     const w = world({ scripts: s => /8090/.test(s), sdk: mockSdk({ snap }), cfg: cfgBase }); boot(w); await sleep(60);
     const upd = w.stores['fb-update']; ok('update banner shown', upd.style.display === 'block' && upd.kids.length >= 2); const okBtn = upd.kids.find(k => k.onclick); okBtn.onclick(); ok('markUpdateSeen(item.id) called', w.calls.some(x => x[0] === 'markUpdateSeen' && x[1] === 77)); ok('banner hidden after ack', upd.style.display === 'none');
-    const don = w.stores['fb-donate']; const txt = don.kids.map(k => k.textContent).join('|'); ok('donate info rendered as plain text from Hub', don.style.display === 'block' && /GABC123/.test(txt) && /0123456789/.test(txt) && /nudge|support/i.test(txt) === true);
+    const don = w.stores['fb-donate'];
+    const walk = n => [n && n.textContent || ''].concat((n && n.kids || []).flatMap(walk)).join('|');
+    const txt = walk(don);
+    ok('donate info rendered as plain text from Hub', don.style.display === 'block' && /GABC123/.test(txt) && /0123456789/.test(txt) && /nudge|support/i.test(txt) === true);
     ok('deeply nested objects are not dumped', !/ignored/.test(txt));
-    const payBtn = don.kids.find(k => k.onclick); payBtn.onclick(); ok('payment form opens', w.stores['fb-pay'].style.display === '' && w.stores['fb-form'].style.display === 'none');
+    ok('account numbers have COPY', (don.kids || []).some(k => (k.kids || []).some(c => /COPY/i.test(c.textContent || ''))));
+    const payBtn = [...don.kids].reverse().find(k => k.onclick && !/COPY/i.test(k.textContent || '')); payBtn.onclick(); ok('payment form opens', w.stores['fb-pay'].style.display === '' && w.stores['fb-form'].style.display === 'none');
     w.stores['fb-txn'].value = 'TX9'; w.stores['fb-method'].value = 'pi'; w.stores['fb-amount'].value = '1'; await w.stores['fb-paysend'].onclick(); await sleep(10);
     const rp = w.calls.find(x => x[0] === 'reportPayment'); ok('reportPayment({txn_id,method,amount})', rp && rp[1].txn_id === 'TX9' && rp[1].method === 'pi' && rp[1].amount === '1'); ok('re-sync after payment', w.calls.filter(x => x[0] === 'sync').length === 2); }
   // 6) errors from the Hub are shown, not swallowed; sync failure keeps feedback available

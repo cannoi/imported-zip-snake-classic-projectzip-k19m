@@ -116,8 +116,8 @@ socket.on('lobby', l => {
   $('l-code').textContent = l.code; $('mode').value = l.mode; $('map').value = l.map;
   $('diff').value = l.diff; $('modeinfo').textContent = MODE_INFO[l.mode] || ''; $('mode').disabled = $('map').disabled = $('diff').disabled = !host;
   $('b-bot').style.display = $('b-unbot').style.display = host ? '' : 'none';
-  const pub = l.url || (hosts && hosts.publicUrl) || '';
-  const lan = (l.lan && l.lan[0]) || (hosts && hosts.lanUrls && hosts.lanUrls[0]) || location.origin;
+  const pub = rewritePort(l.url || (hosts && hosts.publicUrl) || location.origin);
+  const lan = rewritePort((l.lan && l.lan[0]) || (hosts && hosts.lanUrls && hosts.lanUrls[0]) || location.origin);
   $('share').textContent = t('invite') + (pub || lan) + t('codeWord') + l.code;
   paintQr($('qr-public'), pub || lan); paintQr($('qr-lan'), lan);
 
@@ -228,7 +228,19 @@ const vibOn = () => localStorage.snakeVib !== 'off', vib = ms => { if (vibOn() &
 const PANELS = ['screen-settings', 'screen-help', 'screen-connect']; let prevScr = null;
 function openPanel(id) { const a = document.querySelector('.screen.active'); if (!a || !PANELS.includes(a.id)) prevScr = a ? a.id : null; show(id); if (id === 'screen-settings') fillSettings(); if (id === 'screen-connect') fillConnect(); }
 function closePanel() { if (prevScr === 'screen-over') show('screen-over'); else if (playing) show(null); else show(room ? 'screen-lobby' : 'screen-menu'); }
-function shareLink() { return (hosts && hosts.publicUrl) || (room && room.url) || (hosts && hosts.lanUrls && hosts.lanUrls[0]) || lanUrls.split(' / ')[0] || location.origin; }
+function rewritePort(u) {
+  if (!u) return u;
+  try {
+    const x = new URL(u, location.href);
+    const want = location.port;
+    if (want && x.port && x.port !== want && (x.port === '8080' || x.port === String(hosts && hosts.port || ''))) {
+      x.port = want;
+    }
+    if (want && !x.port && location.protocol === x.protocol) { /* keep */ }
+    return x.href.replace(/\/$/, '');
+  } catch (e) { return u; }
+}
+function shareLink() { return rewritePort((hosts && hosts.publicUrl) || (room && room.url) || (hosts && hosts.lanUrls && hosts.lanUrls[0]) || lanUrls.split(' / ')[0] || location.origin); }
 function copyText(txt) { try { if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(txt).then(() => toast(t('copied')));
   const a = document.createElement('textarea'); a.value = txt; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); toast(t('copied')); } catch (e) { prompt(t('copyInvite'), txt); } }
 function fillSettings() {
@@ -244,10 +256,11 @@ function paintQr(img, url) { if (!img) return; if (!url) { img.removeAttribute('
 let hosts = null;
 function applyHosts(i) {
   hosts = i || hosts; if (!hosts) return;
+  const idl = $('app-id-line'); if (idl && hosts.appId) idl.textContent = 'App ID: ' + hosts.appId;
   lanUrls = (hosts.lanUrls || hosts.urls || []).join(' / ');
   if (room) {
-    paintQr($('qr-public'), hosts.publicUrl || hosts.url || lanUrls.split(' / ')[0]);
-    paintQr($('qr-lan'), (hosts.lanUrls && hosts.lanUrls[0]) || location.origin);
+    paintQr($('qr-public'), rewritePort(hosts.publicUrl || hosts.url || lanUrls.split(' / ')[0]));
+    paintQr($('qr-lan'), rewritePort((hosts.lanUrls && hosts.lanUrls[0]) || location.origin));
   }
 }
 function fillConnect() {

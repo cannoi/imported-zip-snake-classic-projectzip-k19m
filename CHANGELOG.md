@@ -46,3 +46,8 @@
 ## 2.9.1
 - Feedback Hub parameters (Hub ID, base URL, ingest token) built into `server.js`; no `.env` needed. Web-form fallback (`/feedback`) when the SDK cannot be loaded.
 - SoloHost kit: `solohost/docker-compose.yml` (GHCR image, PORT/HOST env, no host port, data volume) and `solohost/config_options.yml` rewritten.
+
+## 2.9.2
+- Multiplayer invite URLs no longer fall back to internal container port 8080; they use the SoloHost public port from Host / X-Forwarded-Port / last socket handshake.
+- Client rewrites stale :8080 invite links to the port the browser actually opened.
+- Feedback donate rows compact + COPY on account numbers. App ID shown in Settings.
