@@ -2,14 +2,14 @@
 
 ## 1. Bật game (trên máy Windows dùng làm "máy chủ")
 - Cài **Docker Desktop** (hoặc **Node.js LTS**), rồi **nhấp đúp `start-windows.bat`**.
-- Cửa sổ sẽ in ra các đường dẫn dạng `http://192.168.1.23:8080`. Đó là địa chỉ để mọi người vào chơi.
+- Cửa sổ sẽ in ra các đường dẫn dạng `http://192.168.1.23:PORT`. Đó là địa chỉ để mọi người vào chơi.
 - Muốn xem lại địa chỉ: nhấp đúp `show-ip-windows.bat`.
 
 ## 2. Tự xem IP trên Windows (nếu không dùng file .bat)
 1. Bấm phím **Windows**, gõ **cmd**, nhấn Enter.
 2. Gõ **ipconfig**, nhấn Enter.
 3. Tìm dòng **IPv4 Address** (ví dụ `192.168.1.23`).
-4. Đường dẫn là `http://192.168.1.23:8080`.
+4. Đường dẫn là `http://192.168.1.23:PORT`.
 
 ## 3. Vào chơi
 - Điện thoại, máy tính, TV **cùng Wi-Fi** → mở trình duyệt → nhập đường dẫn. Không cần cài gì.

@@ -1,15 +1,17 @@
 services:
   app:
     build: .
-    image: snake-arcade:2.8.1
+    image: snake-arcade:2.9.1
     restart: unless-stopped
     env_file: .env
+    environment:
+      PORT: "8080"            # internal container port only (stable)
     ports:
-      - "${HOST_PORT:-8080}:8080"   # 0.0.0.0 để các máy trong LAN truy cập được
+      - "8080"                # container port only: Docker (or SoloHost Port Manager) picks the public host port - see `docker compose port app 8080`
     volumes:
       - ./data:/app/data
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/health"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:$${PORT:-8080}/health || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3

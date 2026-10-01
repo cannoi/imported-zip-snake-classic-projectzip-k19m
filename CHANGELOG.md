@@ -37,3 +37,12 @@
 - AI: ai-app-kernel upgraded to 1.1.1 (byte-identical); adapter adds `/ai/route`, `/ai/logo.png`, typed errors (`kind`), kernel version in status, sticky file in `DATA_DIR`, operator env keys recognised.
 - Security: a user-entered token is no longer forwarded to other providers during fallback (see AI_KERNEL_1_1_1_REPORT.md).
 - Tests: `tests/ai-kernel-111.test.js` (59 checks) added to `npm test`; smoke test now expects kernel 1.1.1.
+
+## 2.9.0
+- SoloHost Port Manager: no fixed public host port (see SOLOHOST_PORTS.md); `HOST_PORT` removed; invite URLs follow the browser's real port; Windows helper reads `docker compose port`.
+- SoloHost Feedback Hub: in-game Feedback form, update banner, donate/payment report (see SHFH_INTEGRATE.md). `shfh-client.js` was not supplied - SDK loads from the Hub or from `public/shfh-client.js`.
+- Tests: `tests/port-compat.test.js` (25) and `tests/feedback-hub.test.js` (31) added to `npm test`.
+
+## 2.9.1
+- Feedback Hub parameters (Hub ID, base URL, ingest token) built into `server.js`; no `.env` needed. Web-form fallback (`/feedback`) when the SDK cannot be loaded.
+- SoloHost kit: `solohost/docker-compose.yml` (GHCR image, PORT/HOST env, no host port, data volume) and `solohost/config_options.yml` rewritten.

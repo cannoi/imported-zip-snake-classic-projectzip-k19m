@@ -5,14 +5,14 @@
 docker compose up -d --build     # hoặc: npm install && npm start
 docker compose ps                # cột STATUS phải là "healthy"
 ```
-Mở `http://<IP-máy-chủ>:8080` (xem IP: `ipconfig` / `ip a`). Dữ liệu kỷ lục lưu ở `./data/scores.json`.
+Mở `http://<IP-máy-chủ>:<PORT>` (PORT do SoloHost cấp; chạy `docker compose port app 8080` để xem) (xem IP: `ipconfig` / `ip a`). Dữ liệu kỷ lục lưu ở `./data/scores.json`.
 
 ## Kiểm thử LAN
 1. Máy A: mở web → **Tạo phòng LAN** → ghi mã 4 ký tự.
 2. Máy B (điện thoại/TV, cùng Wi-Fi): mở cùng URL → nhập mã → **Vào phòng**.
 3. Máy A chọn chế độ + bản đồ → **Bắt đầu**. Đổi tên/màu/skin ở menu sẽ đồng bộ ngay.
 4. Điều khiển: phím mũi tên/WASD (PC, remote TV), D-pad hoặc vuốt (cảm ứng).
-5. Nếu máy khác không vào được: mở port `HOST_PORT` trên firewall.
+5. Nếu máy khác không vào được: mở cổng public mà SoloHost/Docker đã cấp trên firewall.
 
 ## Kết nối & đa người chơi (bản 2.2)
 - **Tự nối lại:** mỗi tab có một ID riêng. Mất Wi-Fi, khóa màn hình hay F5 giữa ván → tự vào lại đúng phòng, giữ rắn và điểm. Trong lúc offline (tối đa 60 giây, đổi bằng `GRACE_MS`) AI lái rắn giúp; quá hạn thì bị dọn khỏi phòng.

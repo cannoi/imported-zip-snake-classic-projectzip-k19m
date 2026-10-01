@@ -39,7 +39,7 @@ const LEVELS = [
 ];
 const LEVEL_MAPS = LEVELS.map(l => l.map);
 const BASE = { easy: 6, normal: 4, fast: 3 }, BOT_COLORS = ['#ff7a00', '#b266ff', '#00f3ff', '#ff007f', '#ffea00'];
-const GRACE_MS = +process.env.GRACE_MS || 60000, MAX_ROOMS = +process.env.MAX_ROOMS || 50, HOST_PORT = process.env.HOST_PORT || PORT;
+const GRACE_MS = +process.env.GRACE_MS || 60000, MAX_ROOMS = +process.env.MAX_ROOMS || 50;   // PORT = internal container port only; the public host port is assigned by SoloHost
 const PUBLIC_URL = process.env.PUBLIC_URL || ''; let botSeq = 0;
 const isCoop = r => r.mode === 'coop' || r.mode === 'levels';
 const solid = v => v === 1 || v === 3 || v === 7;   // 1 wall · 3 spikes · 7 closed gate (2 portal · 4 mud · 5 boost pad are passable)
@@ -303,23 +303,32 @@ function lobby(r) {
 const app = express(), srv = http.createServer(app), io = new Server(srv, { pingInterval: 5000, pingTimeout: 8000, cors: { origin: true } });
 app.use(express.json({ limit: '200kb' }));
 app.use(express.static('public'));
+const APP_VERSION = (() => { try { return require('./package.json').version || '0.0.0'; } catch (e) { return '0.0.0'; } })();
+// SoloHost Feedback Hub: built-in defaults (no .env needed); SHFH_* env variables override them.
+// The ingest token is a *client* token by design of the Hub SDK: any browser that opens the game can see it. Rotate it on the Hub if abused.
+const SHFH = { hubId: 'FH-CANNOI-0905428801SH', hubUrl: 'http://14.176.78.46:8090', ingestToken: 'cannoi_7Kp9xV2mQ8rN4tY6cL3wA5zD1eF0uH9' };
+app.get('/api/shfh-config', (req, res) => {
+  const hubUrl = String(process.env.SHFH_HUB_URL || SHFH.hubUrl).replace(/\/+$/, '');
+  res.json({ hubId: process.env.SHFH_HUB_ID || SHFH.hubId, hubUrl, formUrl: hubUrl + '/feedback', ingestToken: process.env.SHFH_INGEST_TOKEN != null ? process.env.SHFH_INGEST_TOKEN : SHFH.ingestToken,
+    appId: process.env.SHFH_APP_ID || 'snake-arcade', appName: process.env.SHFH_APP_NAME || 'Snake Arcade', version: APP_VERSION, platform: 'solohost', enabled: process.env.SHFH_ENABLED !== '0' });
+});
 let publicIp = '';
 function lanIps() {
   return Object.values(os.networkInterfaces()).flat().filter(i => i && (i.family === 'IPv4' || i.family === 4) && !i.internal).map(i => i.address);
 }
 function hostInfo(req) {
   const ips = lanIps();
-  const port = HOST_PORT;
   const host = req ? String(req.get('x-forwarded-host') || req.get('host') || '').split(',')[0].trim() : '';
+  const port = (host.match(/:(\d+)$/) || [])[1] || (req ? '' : String(PORT));   // public port = whatever port the browser used (SoloHost may assign any)
   const proto = req ? String(req.get('x-forwarded-proto') || req.protocol || 'http').split(',')[0].trim() : 'http';
   const reqUrl = host && !/^(localhost|127\.)/.test(host) ? proto + '://' + host : '';
-  const publicUrl = PUBLIC_URL || (publicIp ? ('http://' + publicIp + ':' + port) : '') || reqUrl;
-  const lanUrls = ips.map(ip => 'http://' + ip + ':' + port);
+  const publicUrl = PUBLIC_URL || reqUrl || ((publicIp && port) ? ('http://' + publicIp + ':' + port) : '');
+  const lanUrls = port ? ips.map(ip => 'http://' + ip + ':' + port) : [];
   const urls = [];
   if (publicUrl) urls.push(publicUrl);
   lanUrls.forEach(u => { if (!urls.includes(u)) urls.push(u); });
   if (reqUrl && !urls.includes(reqUrl)) urls.push(reqUrl);
-  return { port: PORT, hostPort: port, publicIp, publicUrl, lanUrls, ips, urls, url: publicUrl };
+  return { port: PORT, hostPort: port ? +port : null, publicIp, publicUrl, lanUrls, ips, urls, url: publicUrl };
 }
 async function refreshPublicIp() {
   for (const u of ['https://api.ipify.org', 'https://ipv4.icanhazip.com', 'https://ifconfig.me/ip']) {

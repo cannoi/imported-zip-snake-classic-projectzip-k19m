@@ -1,8 +1,16 @@
 services:
   app:
-    image: paf-app:snake-classic
+    image: ghcr.io/cannoi/imported-zip-snake-classic-projectzip-k19m:latest
     restart: unless-stopped
     labels:
       pi.ui.primary: "true"
-    ports:
-      - "127.0.0.1:18080:8080"
+    environment:
+      PORT: "8080"
+      HOST: "0.0.0.0"
+    expose:
+      - "8080"            # internal container port only; SoloHost Port Manager allocates and publishes the public host port -> 8080
+    volumes:
+      - snake-data:/app/data    # keeps high scores and the AI token across updates/restarts
+
+volumes:
+  snake-data:

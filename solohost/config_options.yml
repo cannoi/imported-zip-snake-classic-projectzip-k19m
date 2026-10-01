@@ -1,7 +1,7 @@
-title: "Snake Classic"
+title: "Snake Arcade"
 eyebrow: SoloHost App
-description: "Create a simple mobile Snake game.  - Classic snake gameplay: move, eat food, grow longer. - Swipe controls and optional on-screen arrows. - Collision with walls or the snake ends the game. - Score and high score. - Star"
-footer_hint: Ready to run on Pi Desktop SoloHost.
+description: "Multiplayer Snake for the family on your LAN: rooms, bots, 30 stages, chat, AI referee. Open the link on any phone, PC or TV - nothing to install."
+footer_hint: Ready to run on Pi Desktop SoloHost. The public port is assigned by SoloHost.
 output_file: .env
-after_save: Saved. Start the app from SoloHost.
+after_save: Saved. Start the app from SoloHost, then open the port SoloHost shows.
 fields: []
