@@ -8,8 +8,8 @@
 (function () {
   const $$ = id => document.getElementById(id);
   const add = (lg, o) => Object.assign(I18N[lg], o);
-  add('en', { fbBtn: 'FEEDBACK', fbTitle: 'SEND FEEDBACK', fbType: 'Type', fbBug: 'Bug', fbIdea: 'Idea', fbOther: 'Other', fbMsg: 'What happened / what would you like?', fbRating: 'Rating', fbWarn: 'Do not write passwords, API keys or seed phrases.', fbSend: 'SEND', fbSent: 'Thank you! Feedback sent ✔', fbFail: 'Could not send', fbEmpty: 'Please write a message', fbHubOff: 'Feedback Hub SDK not reachable - the button opens the web form', fbHubOn: 'Feedback Hub connected', fbUpdate: 'Update available', fbUpdateOk: 'GOT IT', fbDonate: 'Support the author', fbNudge: 'Enjoying the game? You can support the author below.', fbThanks: 'Thanks for your support ❤', fbPaid: 'REPORT PAYMENT', fbTxn: 'Transaction ID', fbMethod: 'Method (e.g. pi)', fbAmount: 'Amount', fbPaySent: 'Payment reported ✔', fbCancel: 'CANCEL' });
-  add('vi', { fbBtn: 'GÓP Ý', fbTitle: 'GỬI GÓP Ý', fbType: 'Loại', fbBug: 'Lỗi', fbIdea: 'Ý tưởng', fbOther: 'Khác', fbMsg: 'Có chuyện gì / bạn muốn gì?', fbRating: 'Đánh giá', fbWarn: 'Không viết mật khẩu, API key hay cụm từ khôi phục.', fbSend: 'GỬI', fbSent: 'Cảm ơn bạn! Đã gửi góp ý ✔', fbFail: 'Không gửi được', fbEmpty: 'Hãy nhập nội dung', fbHubOff: 'Không tải được SDK Feedback Hub - nút sẽ mở biểu mẫu web', fbHubOn: 'Đã kết nối Feedback Hub', fbUpdate: 'Có bản cập nhật', fbUpdateOk: 'ĐÃ BIẾT', fbDonate: 'Ủng hộ tác giả', fbNudge: 'Thấy game vui? Bạn có thể ủng hộ tác giả ở bên dưới.', fbThanks: 'Cảm ơn bạn đã ủng hộ ❤', fbPaid: 'BÁO ĐÃ THANH TOÁN', fbTxn: 'Mã giao dịch', fbMethod: 'Phương thức (vd pi)', fbAmount: 'Số tiền', fbPaySent: 'Đã báo thanh toán ✔', fbCancel: 'HỦY' });
+  add('en', { fbBtn: 'FEEDBACK', fbTitle: 'SEND FEEDBACK', fbType: 'Type', fbBug: 'Bug', fbIdea: 'Idea', fbOther: 'Other', fbMsg: 'What happened / what would you like?', fbRating: 'Rating', fbWarn: 'Do not write passwords, API keys or seed phrases.', fbSend: 'SEND', fbSent: 'Thank you! Feedback sent ✔', fbFail: 'Could not send', fbEmpty: 'Please write a message', fbHubOff: 'Feedback Hub SDK not reachable - the button opens the web form', fbHubOn: 'Feedback Hub connected', fbUpdate: 'Update available', fbUpdateOk: 'GOT IT', fbDonate: 'Support the author', fbNudge: 'Enjoying the game? You can support the author below.', fbThanks: 'Thanks for your support ❤', fbPaid: 'REPORT PAYMENT', fbTxn: 'Transaction ID', fbMethod: 'Method (e.g. pi)', fbAmount: 'Amount', fbPaySent: 'Payment reported ✔', fbCancel: 'CANCEL', fbCopy: 'COPY', fbHubMsg: 'From Feedback Hub', fbDismiss: 'OK' });
+  add('vi', { fbBtn: 'GÓP Ý', fbTitle: 'GỬI GÓP Ý', fbType: 'Loại', fbBug: 'Lỗi', fbIdea: 'Ý tưởng', fbOther: 'Khác', fbMsg: 'Có chuyện gì / bạn muốn gì?', fbRating: 'Đánh giá', fbWarn: 'Không viết mật khẩu, API key hay cụm từ khôi phục.', fbSend: 'GỬI', fbSent: 'Cảm ơn bạn! Đã gửi góp ý ✔', fbFail: 'Không gửi được', fbEmpty: 'Hãy nhập nội dung', fbHubOff: 'Không tải được SDK Feedback Hub - nút sẽ mở biểu mẫu web', fbHubOn: 'Đã kết nối Feedback Hub', fbUpdate: 'Có bản cập nhật', fbUpdateOk: 'ĐÃ BIẾT', fbDonate: 'Ủng hộ tác giả', fbNudge: 'Thấy game vui? Bạn có thể ủng hộ tác giả ở bên dưới.', fbThanks: 'Cảm ơn bạn đã ủng hộ ❤', fbPaid: 'BÁO ĐÃ THANH TOÁN', fbTxn: 'Mã giao dịch', fbMethod: 'Phương thức (vd pi)', fbAmount: 'Số tiền', fbPaySent: 'Đã báo thanh toán ✔', fbCancel: 'HỦY', fbCopy: 'COPY', fbHubMsg: 'Từ Feedback Hub', fbDismiss: 'ĐÃ BIẾT' });
   if (typeof applyLang === 'function') applyLang();
 
   let hub = null, snap = null, state = 'off', rating = 0, cfg = null;
@@ -46,6 +46,42 @@
     }
     if (acts.includes('payment_ok') || acts.includes('thanks')) toast(t('fbThanks'));
     renderDonate(acts.includes('unpaid_nudge'));
+    renderNotices(snap);
+  }
+  const seenNotes = new Set();
+  function noticeList(s) {
+    const out = [];
+    const push = (id, title, body) => { const b = text(body || title); if (!b) return; out.push({ id: String(id || b), title: text(title || t('fbHubMsg')), body: b }); };
+    ['notices', 'notifications', 'messages', 'inbox', 'replies'].forEach(k => {
+      const arr = s && s[k]; if (!Array.isArray(arr)) return;
+      arr.forEach((n, i) => {
+        if (n == null) return;
+        if (typeof n === 'string') push(k + i, t('fbHubMsg'), n);
+        else push(n.id || n.key || (k + i), n.title || n.subject || t('fbHubMsg'), n.body || n.message || n.text || n.note);
+      });
+    });
+    if (s && s.reply && (s.reply.message || s.reply.text)) push(s.reply.id || 'reply', s.reply.title || t('fbHubMsg'), s.reply.message || s.reply.text);
+    return out.slice(0, 6);
+  }
+  function renderNotices(s) {
+    const box = $$('fb-notices'); if (!box) return;
+    const list = noticeList(s);
+    list.forEach(n => { if (!seenNotes.has(n.id)) { seenNotes.add(n.id); try { toast(n.title + ': ' + n.body); } catch (e) {} } });
+    box.innerHTML = '';
+    if (!list.length) { box.style.display = 'none'; return; }
+    box.style.display = 'block';
+    list.forEach(n => {
+      const card = document.createElement('div'); card.className = 'fb-note';
+      const b = document.createElement('b'); b.textContent = n.title; card.appendChild(b);
+      const p = document.createElement('div'); p.textContent = n.body; card.appendChild(p);
+      const ok = document.createElement('button'); ok.type = 'button'; ok.className = 'btn-secondary'; ok.textContent = t('fbDismiss');
+      ok.onclick = () => { card.remove(); if (!box.children.length) box.style.display = 'none'; try { if (hub && hub.markNoticeSeen) hub.markNoticeSeen(n.id); } catch (e) {} };
+      card.appendChild(ok); box.appendChild(card);
+    });
+  }
+  async function pollHub() {
+    if (!hub || state !== 'on') return;
+    try { snap = await hub.sync(); applySnapshot(); } catch (e) {}
   }
   function renderDonate(nudge) {                           // Pi / MB Bank info comes from the Hub; shape is not fixed, so only flat text values are shown
     const box = $$('fb-donate'); if (!box) return; box.innerHTML = '';
@@ -57,13 +93,13 @@
     const h = document.createElement('b'); h.textContent = t('fbDonate'); box.appendChild(h);
     if (nudge) { const p = document.createElement('div'); p.className = 'small'; p.textContent = t('fbNudge'); box.appendChild(p); }
     rows.slice(0, 8).forEach(([k, v]) => {
-      const row = document.createElement('div'); row.className = 'fb-row';
-      const lab = document.createElement('span'); lab.className = 'fb-k'; lab.textContent = k;
-      const val = document.createElement('code'); val.className = 'fb-val'; val.textContent = v; val.title = v;
+      const row = document.createElement('div'); row.className = 'fb-acc';
+      const lab = document.createElement('div'); lab.className = 'fb-k'; lab.textContent = k;
+      const val = document.createElement('code'); val.className = 'fb-val'; val.textContent = v;
       row.appendChild(lab); row.appendChild(val);
       const acc = /\d{6,}/.test(String(v).replace(/\s/g,'')) || String(v).length >= 8;
       if (acc) {
-        const b = document.createElement('button'); b.type = 'button'; b.className = 'btn-secondary fb-copy'; b.textContent = 'COPY';
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'btn-secondary fb-copy'; b.textContent = t('fbCopy');
         b.onclick = () => { if (typeof copyText === 'function') copyText(String(v)); else { try { navigator.clipboard.writeText(String(v)); } catch (e) {} } };
         row.appendChild(b);
       }
@@ -104,5 +140,5 @@
   modal().addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); closeModal(); } });
   modal().addEventListener('click', e => { if (e.target === modal()) closeModal(); });
   const prevSetLang = window.setLang; if (typeof prevSetLang === 'function') window.setLang = function (l) { prevSetLang(l); refreshUi(); };
-  refreshUi(); boot();
+  refreshUi(); boot(); setInterval(pollHub, 45000);
 })();

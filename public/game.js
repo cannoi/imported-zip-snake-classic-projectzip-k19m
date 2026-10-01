@@ -256,7 +256,6 @@ function paintQr(img, url) { if (!img) return; if (!url) { img.removeAttribute('
 let hosts = null;
 function applyHosts(i) {
   hosts = i || hosts; if (!hosts) return;
-  const idl = $('app-id-line'); if (idl && hosts.appId) idl.textContent = 'App ID: ' + hosts.appId;
   lanUrls = (hosts.lanUrls || hosts.urls || []).join(' / ');
   if (room) {
     paintQr($('qr-public'), rewritePort(hosts.publicUrl || hosts.url || lanUrls.split(' / ')[0]));

@@ -51,3 +51,7 @@
 - Multiplayer invite URLs no longer fall back to internal container port 8080; they use the SoloHost public port from Host / X-Forwarded-Port / last socket handshake.
 - Client rewrites stale :8080 invite links to the port the browser actually opened.
 - Feedback donate rows compact + COPY on account numbers. App ID shown in Settings.
+
+## 2.9.3
+- Donate accounts shown in full (no clipped scroll box). App ID line removed from Settings.
+- Feedback Hub notices/messages/replies polled every 45s and shown as banners + toast.
