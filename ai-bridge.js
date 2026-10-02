@@ -180,6 +180,40 @@ function mount(app, ctx) {
     res.json(await status());
   });
   app.get('/ai/health', (req, res) => res.json({ ok: true, module: 'ai-app-kernel', version: KERNEL_VERSION, mounted: true, provider: cfg().provider }));
+  const STRONG = /^(gsk_|sk-or-|xai-|AIza)/i;
+  async function kernelMod() { const parts = await modP; return parts && parts.mod; }
+  app.post('/api/settings/peek-token', async (req, res) => {
+    if (!pinOk(req)) return res.status(403).json({ error: 'admin pin required' });
+    const token = String((req.body && req.body.token) || '').trim();
+    const mod = await kernelMod();
+    const hinted = mod && mod.detectProviderFromToken ? mod.detectProviderFromToken(token) : null;
+    const strong = !!(hinted && STRONG.test(token));
+    res.json({ ok: true, suggested_provider: strong ? hinted : null });
+  });
+  app.post('/api/settings/test-ai', async (req, res) => {
+    if (!pinOk(req)) return res.status(403).json({ error: 'admin pin required' });
+    const b = req.body || {};
+    const c = cfg();
+    const token = String(b.token || b.key || c.key || '').trim();
+    const mod = await kernelMod();
+    const hinted = mod && mod.detectProviderFromToken ? mod.detectProviderFromToken(token) : null;
+    let provider = String(b.provider || c.provider || hinted || '').trim().toLowerCase();
+    if (provider === 'auto') provider = hinted || '';
+    const strong = hinted && STRONG.test(token);
+    if (strong && provider && hinted !== provider) {
+      return res.status(200).json({ ok: false, suggested_provider: hinted, warning: 'Token looks like ' + hinted + ', not ' + provider + '. Switched provider — not sent to the wrong API.' });
+    }
+    if (!provider) return res.status(200).json({ ok: false, warning: 'Choose a provider (sk- alone is not enough to guess).' });
+    if (!mod || !mod.verifyProvider) return res.status(200).json({ ok: false, warning: 'AI kernel not ready' });
+    const baseUrl = String(b.local_base_url || b.baseUrl || c.baseUrl || '');
+    const model = String(b.model || c.model || '');
+    try {
+      const result = await mod.verifyProvider({ provider, apiKey: token, baseUrl, model });
+      res.status(200).json(result);
+    } catch (e) {
+      res.status(200).json({ ok: false, kind: 'other', warning: String(e.message || e).slice(0, 180) });
+    }
+  });
   app.get('/ai/route', async (req, res) => {       // kernel 1.1.1: which provider/model is auto-selected right now (no secrets)
     try { const k = await getKernel(); const r = k && k.route ? await k.route() : {}; res.json({ provider: r.provider || '', model: r.model || '', sticky: !!r.sticky, candidates: r.candidates || [] }); }
     catch (e) { res.status(400).json({ error: 'route unavailable' }); }

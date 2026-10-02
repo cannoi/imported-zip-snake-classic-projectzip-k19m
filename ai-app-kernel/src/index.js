@@ -1,16 +1,17 @@
-import { completeChat, listProviders, collectAvailableKeys, isLocalProvider } from './providers.js';
+import { completeChat, listProviders, collectAvailableKeys, isLocalProvider, verifyProvider } from './providers.js';
 import { createActionRegistry } from './actions.js';
 import { createJsonFileStore, createMemoryStore, createCustomStore } from './store.js';
 import { kernelTools, runTool } from './tools.js';
 import { mountKernel } from './http.js';
-import { createStickyRouter, modelsFor, detectProviderFromToken, discoverModels, classifyProviderError, friendlyAiError, normalizeModel, PROVIDER_PRIORITY } from './router.js';
+import { createStickyRouter, modelsFor, detectProviderFromToken, discoverModels, discoverModelsDetailed, classifyProviderError, friendlyAiError, normalizeModel, PROVIDER_PRIORITY, keyBelongsToProvider } from './router.js';
 import { logoPath } from './brand.js';
 
 const SYSTEM = `You are the AI controller for this application.
 Use tools to read the schema, inspect data, and call app actions.
 Never invent collection names that are not in the schema.
-Never expose API keys or secrets.
+Never expose API keys, tokens, or secrets.
 Reply in the user's language.
+Prefer smallest safe upgrade advice. Do not invent features.
 After tool results, give a short status:
 ✅ Done
 ⚠️ Not completed
@@ -30,8 +31,12 @@ export function createAiKernel(options = {}) {
   async function resolveRoute() {
     const keys = collectAvailableKeys();
     if (apiKey) {
-      const id = requestedProvider || process.env.AI_PROVIDER || detectProviderFromToken(apiKey) || Object.keys(keys)[0];
-      if (id) keys[id] = apiKey;
+      const id = requestedProvider || process.env.AI_PROVIDER || detectProviderFromToken(apiKey);
+      if (id && (isLocalProvider(id) || !detectProviderFromToken(apiKey) || detectProviderFromToken(apiKey) === id)) {
+        keys[id] = apiKey;
+      } else if (detectProviderFromToken(apiKey)) {
+        keys[detectProviderFromToken(apiKey)] = apiKey;
+      }
     }
     return router.resolve({
       requestedProvider,
@@ -44,11 +49,16 @@ export function createAiKernel(options = {}) {
   async function completeWithFallback({ system, messages, tools }) {
     const keys = collectAvailableKeys();
     if (apiKey) {
-      const id = requestedProvider || process.env.AI_PROVIDER || detectProviderFromToken(apiKey) || 'openai';
-      if (id) keys[id] = keys[id] || apiKey;
+      const hinted = detectProviderFromToken(apiKey);
+      const id = requestedProvider || process.env.AI_PROVIDER || hinted;
+      if (id && (!hinted || hinted === id || isLocalProvider(id))) keys[id] = keys[id] || apiKey;
+      else if (hinted) keys[hinted] = keys[hinted] || apiKey;
     }
     const route = await resolveRoute();
-    const order = [...new Set([route.provider, ...PROVIDER_PRIORITY.filter(id => keys[id] || (id === route.provider))])];
+    const order = [...new Set([
+      route.provider,
+      ...PROVIDER_PRIORITY.filter((id) => Boolean(keys[id]) || (isLocalProvider(id) && (baseUrl || options.local))),
+    ])];
     let lastErr;
     for (const provider of order) {
       const requested = normalizeModel(provider, requestedModel || process.env.AI_MODEL || '');
@@ -62,11 +72,19 @@ export function createAiKernel(options = {}) {
         if (!mid || tried.has(provider + ':' + mid)) return null;
         tried.add(provider + ':' + mid);
         try {
+          const selected = String(process.env.AI_PROVIDER || '').toLowerCase();
+          const boundKey = keys[provider]
+            || (keyBelongsToProvider(apiKey, provider) ? apiKey : '')
+            || (selected === provider && process.env.AI_API_KEY ? process.env.AI_API_KEY : '');
+          if (!boundKey && !isLocalProvider(provider)) {
+            lastErr = new Error(`No key bound to provider "${provider}"`);
+            return lastErr;
+          }
           const reply = await completeChat({
             provider,
             model: mid,
-            apiKey: apiKey || keys[provider] || '',
-            baseUrl: baseUrl || undefined,
+            apiKey: boundKey,
+            baseUrl: isLocalProvider(provider) ? (baseUrl || undefined) : undefined,
             system, messages, tools,
           });
           await router.rememberSuccess(provider, reply.model || mid);
@@ -86,7 +104,9 @@ export function createAiKernel(options = {}) {
       }
       if (!stopProvider) {
         const discovered = await discoverModels({
-          provider, apiKey: apiKey || keys[provider] || '', baseUrl: baseUrl || undefined,
+          provider,
+          apiKey: keys[provider] || (keyBelongsToProvider(apiKey, provider) ? apiKey : ''),
+          baseUrl: isLocalProvider(provider) ? (baseUrl || undefined) : undefined,
         }).catch(() => []);
         for (const model of discovered) {
           const out = await tryModel(model);
@@ -169,6 +189,10 @@ export {
   collectAvailableKeys,
   isLocalProvider,
   detectProviderFromToken,
+  discoverModels,
+  discoverModelsDetailed,
+  verifyProvider,
+  keyBelongsToProvider,
   classifyProviderError,
   friendlyAiError,
   normalizeModel,

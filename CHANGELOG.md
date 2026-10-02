@@ -55,3 +55,6 @@
 ## 2.9.3
 - Donate accounts shown in full (no clipped scroll box). App ID line removed from Settings.
 - Feedback Hub notices/messages/replies polled every 45s and shown as banners + toast.
+
+## 2.9.4
+- ai-app-kernel 1.1.3. POST /api/settings/test-ai and /api/settings/peek-token. Check token button fills model list. Strong token hints never sent to the wrong provider.

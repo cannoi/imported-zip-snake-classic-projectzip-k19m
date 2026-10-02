@@ -1,3 +1,30 @@
+# AI App Kernel v1.1.3 — Model discovery / token check
+
+## Lỗi
+`discoverModels()` (v1.1.0–1.1.2) chỉ đọc `data.models` và nuốt mọi lỗi thành `[]`. Các API kiểu OpenAI (OpenAI, DeepSeek, Groq, Mistral, xAI, OpenRouter, LM Studio) trả `{ data: [...] }`; Gemini trả tên `models/<id>`. Kết quả: UI luôn báo "Provider did not list models. Token may be invalid…" dù token đúng.
+
+## Sửa (không phá API cũ)
+- `parseModelList(provider, json)` — đọc đúng cả `data`, `models`, mảng trần; lọc embedding/whisper/tts/image; xếp model mặc định lên đầu.
+- `discoverModelsDetailed(opts)` — không bao giờ throw; trả `{ok, models, status, kind, detail}`; `kind` ∈ auth | billing | no_models_endpoint | rate | server | timeout | network | parse | empty.
+- `verifyProvider(opts)` (providers.js) — list → nếu không có /models thì chat thử 1 câu → `{ok, verified, models, kind, warning, hint}`.
+- `discoverModels(opts)` giữ nguyên chữ ký, trả mảng id.
+- `completeChat({ timeoutMs })` — tham số tùy chọn, mặc định không đổi hành vi.
+- Gemini: key qua header `x-goog-api-key`.
+
+# AI App Kernel v1.1.2 — Security + Fix Report
+
+## Bảo mật (xác nhận báo cáo người dùng)
+
+Kernel 1.1.0/1.1.1 gửi cùng khóa người dùng nhập sang mọi nhà khi fallback (`apiKey || keys[provider]`) và `envKey()` lấy OPENAI_API_KEY cho mọi provider. Tái hiện: khóa OpenAI 401 rồi POST tới api.deepseek.com.
+
+### Sửa phía tác giả kernel (v1.1.2)
+
+- `keyBelongsToProvider(token, provider)` — chỉ true khi prefix khớp nhà đó.
+- Vòng fallback bỏ qua nhà không có khóa riêng; không gửi Bearer chéo host.
+- `envKey(id)` chỉ đọc `${ID}_API_KEY`; AI_API_KEY chỉ khi hint khớp; OPENAI_API_KEY chỉ cho openai.
+- Adapter (mỗi khóa một biến môi trường đúng nhà) vẫn đúng và được khuyến nghị.
+- Self-test mock fetch: khóa sk-proj không đụng DeepSeek/Groq. 27/27 passed.
+
 # AI App Kernel v1.1.1 — Fix Report
 
 Nguồn đối chiếu: `ai-app-kernel` v1.1.0 (gói tải lên) + bản đã vá trong Snake Arcade v2.8 + App Builder (token chạy ổn).

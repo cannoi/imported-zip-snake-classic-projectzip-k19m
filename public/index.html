@@ -153,8 +153,8 @@
     <option value="gemini">Google Gemini</option><option value="ollama">Ollama (local)</option>
     <option value="lmstudio">LM Studio (local)</option><option value="local">Local OpenAI-compatible</option><option value="custom">Custom</option>
   </select>
-  <input id="ai-model" class="field" maxlength="200" placeholder="Model (optional — auto if empty)" data-ph="aiModel" autocomplete="off">
-  <input id="ai-token" class="field" type="password" maxlength="300" placeholder="API key / token (not required for local AI)" data-ph="aiToken" autocomplete="off">
+  <select id="ai-model" class="field" aria-label="Model"><option value="">Auto — kernel picks a working model</option></select>
+  <div class="row"><input id="ai-token" class="field" type="password" maxlength="300" placeholder="API key / token (not required for local AI)" data-ph="aiToken" autocomplete="off"><button type="button" id="ai-check" class="btn-secondary" data-i18n="aiCheck">CHECK TOKEN</button></div>
   <input id="ai-base-url" class="field" maxlength="500" placeholder="Local / custom Base URL (optional)" data-ph="aiBaseUrl" autocomplete="off">
   <input id="ai-pin" class="field" type="password" maxlength="40" placeholder="Admin PIN" data-ph="aiPin" autocomplete="off" style="display:none">
   <p id="ai-msg" class="small"></p>

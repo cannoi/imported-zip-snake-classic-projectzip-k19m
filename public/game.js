@@ -8,7 +8,7 @@ const I18N = {
     settings:'SETTINGS', vibrate:'Vibrate (phone)', copyInvite:'COPY INVITE LINK', pause:'PAUSE', resume:'RESUME',
     fullscreen:'FULLSCREEN', continue:'CONTINUE', helpTitle:'HOW TO PLAY', gotIt:'GOT IT', lanTitle:'LAN CONNECT',
     close:'CLOSE', gameOver:'GAME OVER', playAgain:'PLAY AGAIN', backLobby:'BACK TO ROOM', backMenu:'MAIN MENU',
-    namePh:'Name', codePh:'CODE', send:'SEND', chatPh:'Chat · @ai asks the referee', aiAsk:'Ask the referee…', aiKeyBtn:'🔑 KEY', aiKeyTitle:'AI CONNECTION', aiKeyHelp:'Choose a provider. Leave model empty to automatically test and choose a working model. Local AI can work without a cloud token.', aiToken:'API key / token', aiModel:'Model (optional — auto if empty)', aiBaseUrl:'Base URL (optional for local/custom)', aiPin:'Admin PIN', aiSave:'SAVE & TEST', aiRemove:'REMOVE KEY', cancel:'CANCEL', aiLocal:'Local referee · tap 🔑 to add an AI token', aiOn:'AI on: {0}', aiBad:'Key rejected or provider error', aiSaved:'AI connected ✔', aiTesting:'Testing…', aiNeedKey:'No AI token yet. Enter one, or cancel to keep the local referee.', aiTooShort:'Token looks too short', aiOffline:'AI offline', chatOverlay:'Show chat on screen',
+    namePh:'Name', codePh:'CODE', send:'SEND', chatPh:'Chat · @ai asks the referee', aiAsk:'Ask the referee…', aiKeyBtn:'🔑 KEY', aiKeyTitle:'AI CONNECTION', aiKeyHelp:'Choose a provider. Leave model empty to automatically test and choose a working model. Local AI can work without a cloud token.', aiToken:'API key / token', aiModel:'Model (optional — auto if empty)', aiBaseUrl:'Base URL (optional for local/custom)', aiPin:'Admin PIN', aiSave:'SAVE & TEST', aiCheck:'CHECK TOKEN', aiTokenOk:'Token OK. Models: ', aiRemove:'REMOVE KEY', cancel:'CANCEL', aiLocal:'Local referee · tap 🔑 to add an AI token', aiOn:'AI on: {0}', aiBad:'Key rejected or provider error', aiSaved:'AI connected ✔', aiTesting:'Testing…', aiNeedKey:'No AI token yet. Enter one, or cancel to keep the local referee.', aiTooShort:'Token looks too short', aiOffline:'AI offline', chatOverlay:'Show chat on screen',
     skinSolid:'Skin: Solid', skinGrad:'Skin: Fade', skinDots:'Skin: Dots', skinStripes:'Skin: Stripes', skinGlow:'Skin: Neon', skinRainbow:'Skin: Rainbow',
     modeCoop:'Co-op', modeSurv:'Survival', modeTime:'Time Attack', modeLevels:'Campaign',
     diffEasy:'Easy', diffNorm:'Normal', diffHard:'Hard',
@@ -34,7 +34,7 @@ const I18N = {
     settings:'CÀI ĐẶT', vibrate:'Rung (điện thoại)', copyInvite:'SAO CHÉP LINK MỜI', pause:'TẠM DỪNG', resume:'TIẾP TỤC CHƠI',
     fullscreen:'TOÀN MÀN HÌNH', continue:'TIẾP TỤC', helpTitle:'HƯỚNG DẪN CHƠI', gotIt:'ĐÃ HIỂU', lanTitle:'KẾT NỐI LAN',
     close:'ĐÓNG', gameOver:'KẾT THÚC', playAgain:'CHƠI LẠI', backLobby:'VỀ PHÒNG', backMenu:'VỀ MENU',
-    namePh:'Tên', codePh:'MÃ', send:'GỬI', chatPh:'Chat · @ai để hỏi trọng tài', aiAsk:'Hỏi trọng tài…', aiKeyBtn:'🔑 KHÓA', aiKeyTitle:'KẾT NỐI AI', aiKeyHelp:'Chọn nhà cung cấp. Để trống model để AI tự thử và chọn model đang hoạt động. AI cục bộ có thể dùng không cần token cloud.', aiToken:'API key / token', aiModel:'Model (tùy chọn — tự chọn nếu trống)', aiBaseUrl:'Base URL (tùy chọn cho local/custom)', aiPin:'Mã PIN quản trị', aiSave:'LƯU & THỬ', aiRemove:'XÓA TOKEN', cancel:'HỦY', aiLocal:'Trọng tài nội bộ · chạm 🔑 để thêm token AI', aiOn:'AI đang bật: {0}', aiBad:'Token bị từ chối hoặc lỗi nhà cung cấp', aiSaved:'Đã kết nối AI ✔', aiTesting:'Đang thử…', aiNeedKey:'Chưa có token AI. Hãy nhập, hoặc hủy để dùng trọng tài nội bộ.', aiTooShort:'Token quá ngắn', aiOffline:'AI ngoại tuyến', chatOverlay:'Hiện chat trên màn hình',
+    namePh:'Tên', codePh:'MÃ', send:'GỬI', chatPh:'Chat · @ai để hỏi trọng tài', aiAsk:'Hỏi trọng tài…', aiKeyBtn:'🔑 KHÓA', aiKeyTitle:'KẾT NỐI AI', aiKeyHelp:'Chọn nhà cung cấp. Để trống model để AI tự thử và chọn model đang hoạt động. AI cục bộ có thể dùng không cần token cloud.', aiToken:'API key / token', aiModel:'Model (tùy chọn — tự chọn nếu trống)', aiBaseUrl:'Base URL (tùy chọn cho local/custom)', aiPin:'Mã PIN quản trị', aiSave:'LƯU & THỬ', aiCheck:'KIỂM TRA TOKEN', aiTokenOk:'Token OK. Models: ', aiRemove:'XÓA TOKEN', cancel:'HỦY', aiLocal:'Trọng tài nội bộ · chạm 🔑 để thêm token AI', aiOn:'AI đang bật: {0}', aiBad:'Token bị từ chối hoặc lỗi nhà cung cấp', aiSaved:'Đã kết nối AI ✔', aiTesting:'Đang thử…', aiNeedKey:'Chưa có token AI. Hãy nhập, hoặc hủy để dùng trọng tài nội bộ.', aiTooShort:'Token quá ngắn', aiOffline:'AI ngoại tuyến', chatOverlay:'Hiện chat trên màn hình',
     skinSolid:'Skin: Trơn', skinGrad:'Skin: Mờ dần', skinDots:'Skin: Chấm tròn', skinStripes:'Skin: Sọc', skinGlow:'Skin: Neon', skinRainbow:'Skin: Cầu vồng',
     modeCoop:'Co-op', modeSurv:'Sinh tồn', modeTime:'Đua thời gian', modeLevels:'Màn chơi',
     diffEasy:'Dễ', diffNorm:'Thường', diffHard:'Khó',
@@ -437,7 +437,34 @@ $('chat-in') && $('chat-in').addEventListener('keydown', e => { if (e.key === 'E
       if (opening && !info.active) openModal(t('aiNeedKey'));
     };
     $('ai-key-btn').onclick = async () => { await status(); openModal(''); };
-    $('ai-save').onclick = save; $('ai-cancel').onclick = closeModal;
+    function fillModels(list, picked) {
+      const sel = $('ai-model'); if (!sel) return;
+      const cur = picked || sel.value || '';
+      sel.innerHTML = '';
+      const auto = document.createElement('option'); auto.value = ''; auto.textContent = 'Auto'; sel.appendChild(auto);
+      (list || []).forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; sel.appendChild(o); });
+      if (cur && ![...sel.options].some(o => o.value === cur)) { const o = document.createElement('option'); o.value = cur; o.textContent = cur; sel.appendChild(o); }
+      sel.value = cur;
+    }
+    async function checkToken() {
+      const token = $('ai-token').value.trim();
+      const provider = ($('ai-provider').value || 'auto').trim();
+      $('ai-msg').textContent = t('aiTesting');
+      let j = {};
+      try { j = await fetch('/api/settings/test-ai', { method: 'POST', headers: JSONH, body: JSON.stringify({ provider, token, model: $('ai-model').value, local_base_url: $('ai-base-url').value, pin: $('ai-pin').value }) }).then(r => r.json()); }
+      catch (e) { $('ai-msg').textContent = t('aiOffline'); return; }
+      if (j.suggested_provider && $('ai-provider')) $('ai-provider').value = j.suggested_provider;
+      if (j.ok) { fillModels(j.models, j.models && j.models[0]); $('ai-msg').textContent = t('aiTokenOk') + (j.models || []).slice(0, 6).join(', '); }
+      else $('ai-msg').textContent = j.warning || t('aiBad');
+    }
+    $('ai-save').onclick = save; $('ai-cancel').onclick = closeModal; $('ai-check').onclick = checkToken;
+    $('ai-token').addEventListener('paste', () => setTimeout(async () => {
+      const token = $('ai-token').value.trim(); if (token.length < 8) return;
+      try {
+        const j = await fetch('/api/settings/peek-token', { method: 'POST', headers: JSONH, body: JSON.stringify({ token, pin: $('ai-pin').value }) }).then(r => r.json());
+        if (j.suggested_provider) $('ai-provider').value = j.suggested_provider;
+      } catch (e) {}
+    }, 30));
     $('ai-remove').onclick = async () => { await fetch('/ai/key/clear', { method: 'POST', headers: JSONH, body: JSON.stringify({ pin: $('ai-pin').value }) }).catch(() => {}); await status(); closeModal(); };
     $('ai-token').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); save(); } });
     modal.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); closeModal(); } });
