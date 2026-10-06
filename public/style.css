@@ -874,3 +874,17 @@ input.field{-webkit-user-select:text;user-select:text}
 .msg.user { background: #16324a; }
 .fb-acc { margin: 6px 0; }
 .fb-val { display: block; word-break: break-all; user-select: text; -webkit-user-select: text; }
+
+
+/* Badge: never show when empty / hidden */
+.ai-badge[hidden],
+.tab-badge[hidden],
+#aiBadge[hidden],
+#fbTabBadge[hidden] {
+  display: none !important;
+}
+/* FAB hides while AI panel is open */
+.ai-fab[hidden],
+#aiFab[hidden] {
+  display: none !important;
+}

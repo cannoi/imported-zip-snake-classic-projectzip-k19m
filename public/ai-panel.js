@@ -24,14 +24,35 @@ function renderDonate(donate) {
 function setUnread(n) {
   const badge = document.getElementById('aiBadge');
   const tabBadge = document.getElementById('fbTabBadge');
-  if (!badge) return;
-  if (n > 0) {
-    badge.hidden = false; badge.textContent = n > 9 ? '9+' : String(n);
-    if (tabBadge) { tabBadge.hidden = false; tabBadge.textContent = String(n); }
-  } else {
-    badge.hidden = true;
-    if (tabBadge) tabBadge.hidden = true;
+  const count = Number(n) || 0;
+  if (badge) {
+    if (count > 0) {
+      badge.hidden = false;
+      badge.style.display = '';
+      badge.textContent = count > 9 ? '9+' : String(count);
+    } else {
+      badge.hidden = true;
+      badge.style.display = 'none';
+      badge.textContent = '';
+    }
   }
+  if (tabBadge) {
+    if (count > 0) {
+      tabBadge.hidden = false;
+      tabBadge.style.display = '';
+      tabBadge.textContent = count > 9 ? '9+' : String(count);
+    } else {
+      tabBadge.hidden = true;
+      tabBadge.style.display = 'none';
+      tabBadge.textContent = '';
+    }
+  }
+}
+function setFabVisible(visible) {
+  const fab = document.getElementById('aiFab');
+  if (!fab) return;
+  fab.hidden = !visible;
+  fab.style.display = visible ? '' : 'none';
 }
 function gameContext() {
   let code = '', score = null, mode = '';
@@ -67,18 +88,21 @@ const ai = window.UniversalAI.create({
   onOpen() {
     const ov = document.getElementById('aiOverlay');
     if (ov) ov.hidden = false;
+    setFabVisible(false);
     refreshStatus();
     loadSettings();
   },
   onActions: executeActions
 });
 
-document.getElementById('aiClose')?.addEventListener('click', () => {
+function closeAIPanel() {
   const ov = document.getElementById('aiOverlay');
   if (ov) ov.hidden = true;
-});
+  setFabVisible(true);
+}
+document.getElementById('aiClose')?.addEventListener('click', closeAIPanel);
 document.getElementById('aiOverlay')?.addEventListener('click', e => {
-  if (e.target.id === 'aiOverlay') e.target.hidden = true;
+  if (e.target.id === 'aiOverlay') closeAIPanel();
 });
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
   document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
@@ -305,3 +329,5 @@ fb.sync().catch(e => {
   const st = document.getElementById('fbStatus');
   if (st) st.textContent = 'Hub: ' + e.message;
 });
+setUnread(0);
+setFabVisible(true);
