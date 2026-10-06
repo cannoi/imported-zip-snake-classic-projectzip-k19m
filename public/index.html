@@ -199,12 +199,7 @@
           <label class="fb-label">Base URL <small>(bắt buộc cho Custom / Local)</small></label>
           <input type="text" id="setBaseUrl" placeholder="https://api.example.com/v1">
           <label class="fb-label">Model</label>
-          <input type="text" id="setModel" placeholder="auto" value="auto" list="aiModels">
-          <datalist id="aiModels"></datalist>
-          <div class="logs-toolbar">
-            <button type="button" class="ws-btn" id="setRefreshModels">Refresh Models</button>
-            <button type="button" class="ws-btn" id="setTestConnection">Test Connection</button>
-          </div>
+          <input type="text" id="setModel" placeholder="auto" value="auto">
           <label class="fb-label">Mode</label>
           <select id="setMode">
             <option value="cloud_enabled">Cloud Enabled</option>
@@ -213,8 +208,13 @@
             <option value="balanced">Balanced</option>
             <option value="custom">Custom</option>
           </select>
-          <button type="button" class="fb-submit" id="setSave">Save Settings</button>
+          <div class="row" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <button type="button" class="fb-submit" id="setSave">Save Settings</button>
+            <button type="button" class="ws-btn" id="setTest">Check token</button>
+            <button type="button" class="ws-btn" id="setModels">Load models</button>
+          </div>
           <p class="fb-status" id="setStatus"></p>
+          <p class="fb-hint" id="setModelsHint"></p>
         </div>
       </div>
 

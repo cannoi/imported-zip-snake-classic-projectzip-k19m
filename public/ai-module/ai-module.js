@@ -21,9 +21,9 @@ window.UniversalAI = (() => {
       async testConnection(){return json('/api/ai/test',{method:'POST'});},
       async saveSettings(v){return json('/api/ai/settings',{method:'POST',body:JSON.stringify(v)});},
       async catalog(){return json('/api/ai/catalog');},
-      async chat(message,context={}){
+      async chat(message,context={},extra={}){
         const out=await json('/api/ai/chat',{method:'POST',body:JSON.stringify({
-          message,context,history:history.slice(-8)
+          message,context,history:history.slice(-8),actions:extra.actions||[]
         })});
         history.push({role:'user',content:message});
         history.push({role:'assistant',content:out.reply||''});
