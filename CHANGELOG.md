@@ -77,3 +77,9 @@
 - Replaced AI/Feedback flow with the Futuristic Calculator pattern (lib/settings-store.js + lib/ai-gateway.js + /api/ai/settings|chat|status|catalog + /api/logs + SHFH proxy).
 - Old ai-bridge and provider-hub-bridge are no longer mounted.
 - Robot panel: Chat / Feedback / Settings / Logs. Donate accounts still come only from Hub sync.
+
+## 3.2.1
+- Replaced AI/Feedback with Universal AI + Feedback Modules SoloHost v1.1.0.
+- Token never exposed to browser; donate from Hub only.
+- Provider catalog includes Custom + Local; Check token + Refresh models in Settings.
+- Offline local guide via adapter.localReply when no API key.

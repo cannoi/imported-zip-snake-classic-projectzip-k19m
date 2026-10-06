@@ -324,6 +324,9 @@ AI code PHẢI làm theo thứ tự:
 10. Gộp adapter vào Universal Module.
 11. Xóa đường gọi trùng.
 12. Chạy tests.
+13. Test Provider → Refresh Models → Chat.
+14. Test bằng model `auto`; sau đó thử một model cũ/không tồn tại để xác nhận stale-model recovery.
+15. Kiểm tra action allowlist và confirmation.
 13. Kiểm tra browser console.
 14. Kiểm tra API routes.
 15. Kiểm tra SoloHost container.
@@ -363,7 +366,9 @@ SoloHost:
 - [ ] server bind `0.0.0.0`
 - [ ] container port chỉ là container port
 - [ ] không docker.sock
-- [ ] health endpoint
+- [ ] health/test endpoint
+- [ ] model discovery / Refresh endpoint
+- [ ] stale-model recovery tested
 - [ ] restart policy
 - [ ] data persistent
 
@@ -412,3 +417,21 @@ app/
 ```
 
 Không bắt buộc đúng tên thư mục; API contract mới là chuẩn.
+
+
+## Provider recovery — BẮT BUỘC
+
+Không hard-code một model duy nhất cho `auto`. Universal AI Module dùng:
+1. `GET /api/ai/models` để hỏi provider danh sách model hiện có.
+2. Chọn model phù hợp từ danh sách.
+3. Chat bằng model đã phát hiện.
+4. Nếu model đã lưu trả `404`/model-not-found, module refresh danh sách, chọn model mới, retry **một lần** và lưu model mới.
+5. Nếu lỗi `401/403/429` thì không retry vô hạn; trả lỗi chẩn đoán rõ ràng và ghi log đã redact.
+
+`POST /api/ai/test` kiểm tra credential + endpoint bằng Model API; đây là kiểm tra kết nối, không giả vờ rằng mọi model đều có thể generate.
+
+Google Gemini hiện có Model API để liệt kê model và `supportedGenerationMethods`; module chỉ chọn model có `generateContent` khi metadata cung cấp trường này. Google cũng phân biệt API `v1` ổn định với `v1beta`.
+
+## Action security
+
+Không gửi danh sách action từ browser vào AI Gateway. Action registry phải nằm server-side trong `adapter.actions` hoặc `options.actions`. Mỗi action phải có tên duy nhất; action có `requiresConfirmation:true` chỉ được thực thi khi host gửi xác nhận tương ứng.

@@ -17,6 +17,8 @@ window.UniversalAI = (() => {
     return {
       async status(){return json('/api/ai/status');},
       async settings(){return json('/api/ai/settings');},
+      async models(){return json('/api/ai/models');},
+      async testConnection(){return json('/api/ai/test',{method:'POST'});},
       async saveSettings(v){return json('/api/ai/settings',{method:'POST',body:JSON.stringify(v)});},
       async catalog(){return json('/api/ai/catalog');},
       async chat(message,context={},extra={}){

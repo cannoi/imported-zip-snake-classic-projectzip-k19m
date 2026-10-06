@@ -208,8 +208,13 @@
             <option value="balanced">Balanced</option>
             <option value="custom">Custom</option>
           </select>
-          <button type="button" class="fb-submit" id="setSave">Save Settings</button>
+          <div class="row" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <button type="button" class="fb-submit" id="setSave">Save Settings</button>
+            <button type="button" class="ws-btn" id="setTest">Check token</button>
+            <button type="button" class="ws-btn" id="setModels">Load models</button>
+          </div>
           <p class="fb-status" id="setStatus"></p>
+          <p class="fb-hint" id="setModelsHint"></p>
         </div>
       </div>
 
