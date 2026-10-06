@@ -14,6 +14,16 @@ const restoreKey = () => { if (injected) { if (injected.prev === undefined) dele
 const dataDir = () => process.env.DATA_DIR || path.join(__dirname, 'data');
 const keyFile = () => path.join(dataDir(), 'ai-key.json');
 let saved = null;
+function reloadKey(forced) {
+  if (forced === null) { saved = null; restoreKey(); kernel = null; sig = ''; return; }
+  if (forced && typeof forced === 'object') {
+    saved = { provider: forced.provider || '', model: forced.model || '', key: forced.key || '', baseUrl: forced.baseUrl || '' };
+    restoreKey(); kernel = null; sig = '';
+    return saved;
+  }
+  loadSaved(); restoreKey(); kernel = null; sig = '';
+  return saved;
+}
 function loadSaved() {
   try {
     const j = JSON.parse(fs.readFileSync(keyFile(), 'utf8'));
@@ -186,8 +196,10 @@ function mount(app, ctx) {
     if (!PROVIDERS.includes(provider) && provider !== 'auto') return res.status(400).json({ error: 'unsupported provider' });
     const key = String((b.key || b.apiKey) || '').trim();
     const local = LOCAL_PROVIDERS.includes(provider);
-    if ((!local && (key.length < 8 || key.length > 300 || /\s/.test(key))) || (baseUrl && baseUrl.length > 500)) return res.status(400).json({ error: local && !key ? 'local provider selected' : 'token looks invalid' });
+    key = key.replace(/\s+/g, '');
+    if ((!local && (key.length < 8 || key.length > 500)) || (baseUrl && baseUrl.length > 500)) return res.status(400).json({ error: local && !key ? 'local provider selected' : 'token looks invalid' });
     saved = { provider, model, baseUrl, key };
+    restoreKey(); kernel = null; sig = '';
     try { fs.mkdirSync(dataDir(), { recursive: true }); fs.writeFileSync(keyFile(), JSON.stringify(saved), { mode: 0o600 }); } catch (e) { console.error('ai key not persisted:', e.code || 'error'); }
     res.json(await status());
   });
@@ -255,4 +267,4 @@ function mount(app, ctx) {
   return { ask, status, ready: modP };
 }
 
-module.exports = { mount, snapshotRooms, PROVIDERS };
+module.exports = { mount, snapshotRooms, PROVIDERS, reloadKey, loadSaved };

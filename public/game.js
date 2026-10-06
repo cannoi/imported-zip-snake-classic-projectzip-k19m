@@ -422,47 +422,89 @@ $('chat-in') && $('chat-in').addEventListener('keydown', e => { if (e.key === 'E
     async function save() {
       const provider = ($('ai-provider').value || 'auto').trim();
       const model = $('ai-model').value.trim();
-      const key = $('ai-token').value.trim();
+      let key = $('ai-token').value.trim().replace(/\s+/g, '');
       const baseUrl = $('ai-base-url').value.trim();
-      const localProvider = ['ollama','lmstudio','local'].includes(provider);
+      const localProvider = ['ollama','lmstudio','local','custom'].includes(provider);
       if (!localProvider && key.length < 8) { $('ai-msg').textContent = t('aiTooShort'); return; }
       $('ai-msg').textContent = t('aiTesting');
-      let r, j = {};
+      const pin = $('ai-pin') ? $('ai-pin').value : '';
+      let savedOk = false, j = {};
       try {
-        // Prefer provider-hub test when available (full catalog incl. custom/anthropic)
-        const probe = await fetch('/api/ai-hub/test', { method: 'POST', headers: JSONH, body: JSON.stringify({ provider, apiKey: key, baseUrl, model, pin: $('ai-pin').value }) }).then(x => x.json()).catch(() => null);
-        if (probe && probe.ok) {
-          fillModels(probe.models, probe.verifiedModel);
-          r = await fetch('/ai/key', { method: 'POST', headers: JSONH, body: JSON.stringify({ key, provider, model: probe.verifiedModel || model, baseUrl, pin: $('ai-pin').value }) });
+        // 1) Always persist key first (works offline / without live provider call)
+        const saveRes = await fetch('/api/ai-hub/save', { method: 'POST', headers: JSONH, body: JSON.stringify({ provider, apiKey: key, model, baseUrl, pin }) }).then(r => r.json()).catch(() => null);
+        if (saveRes && saveRes.ok) {
+          savedOk = true;
+          if (saveRes.provider && $('ai-provider')) try { $('ai-provider').value = saveRes.provider; } catch (e) {}
+        }
+        // Fallback to legacy /ai/key if hub save missing
+        if (!savedOk) {
+          const r = await fetch('/ai/key', { method: 'POST', headers: JSONH, body: JSON.stringify({ key, provider, model, baseUrl, pin }) });
           j = await r.json().catch(() => ({}));
+          if (r.ok) savedOk = true; else { $('ai-msg').textContent = j.error || t('aiBad'); return; }
         } else {
-          r = await fetch('/ai/key', { method: 'POST', headers: JSONH, body: JSON.stringify({ key, provider, model, baseUrl, pin: $('ai-pin').value }) });
-          j = await r.json().catch(() => ({}));
-          if (probe && probe.warning) $('ai-msg').textContent = probe.warning;
+          // Keep kernel path in sync
+          await fetch('/ai/key', { method: 'POST', headers: JSONH, body: JSON.stringify({ key, provider: (saveRes && saveRes.provider) || provider, model, baseUrl, pin }) }).catch(() => {});
         }
       } catch (e) { $('ai-msg').textContent = t('aiOffline'); return; }
-      if (r && !r.ok) { $('ai-msg').textContent = j.error || t('aiBad'); return; }
       $('ai-token').value = '';
+      // 2) Live verify + fill models (optional — key already saved)
+      try {
+        const probe = await fetch('/api/ai-hub/test', { method: 'POST', headers: JSONH, body: JSON.stringify({ provider: (j.provider) || provider, apiKey: key, model, baseUrl, pin }) }).then(x => x.json()).catch(() => null);
+        if (probe && probe.ok) {
+          fillModels(probe.models, probe.verifiedModel);
+          if (probe.provider && $('ai-provider')) try { $('ai-provider').value = probe.provider; } catch (e) {}
+        }
+        if (probe && !probe.ok && probe.warning) {
+          $('ai-msg').textContent = (savedOk ? (t('aiSaved') + ' · ') : '') + probe.warning;
+        }
+      } catch (e) {}
+      // 3) Short chat ping
       const test = await fetch('/ai/chat', { method: 'POST', headers: JSONH, body: JSON.stringify({ message: 'Reply with one short word: ready', ctx: { code: room && room.code } }) }).then(x => x.json()).catch(() => null);
-      if (test && test.keyError) { await fetch('/ai/key/clear', { method: 'POST', headers: JSONH, body: JSON.stringify({ pin: $('ai-pin').value }) }).catch(() => {}); await status(); $('ai-msg').textContent = t('aiBad') + (test.note ? ' — ' + test.note.slice(0, 120) : ''); return; }
       await status();
-      if (test && test.provider !== 'local-referee') { $('ai-msg').textContent = t('aiSaved'); addLog('ai-log', '🤖 ' + (test.text || '')); }
-      else $('ai-msg').textContent = t('aiBad') + (test && test.note ? ' — ' + test.note.slice(0, 120) : '');
+      if (test && test.keyError) {
+        $('ai-msg').textContent = t('aiBad') + (test.note ? ' — ' + String(test.note).slice(0, 120) : '');
+        return;
+      }
+      if (test && test.provider && test.provider !== 'local-referee') {
+        $('ai-msg').textContent = t('aiSaved');
+        addLog('ai-log', '🤖 ' + (test.text || ''));
+      } else if (savedOk) {
+        $('ai-msg').textContent = t('aiSaved') + (test && test.note ? ' — ' + String(test.note).slice(0, 80) : '');
+      } else {
+        $('ai-msg').textContent = t('aiBad') + (test && test.note ? ' — ' + String(test.note).slice(0, 120) : '');
+      }
     }
     async function checkToken() {
-      const token = $('ai-token').value.trim();
+      let token = $('ai-token').value.trim().replace(/\s+/g, '');
       const provider = ($('ai-provider').value || 'auto').trim();
+      const baseUrl = $('ai-base-url').value.trim();
+      const model = $('ai-model').value.trim();
+      const pin = $('ai-pin') ? $('ai-pin').value : '';
+      if (!token && !baseUrl) { $('ai-msg').textContent = t('aiTooShort'); return; }
       $('ai-msg').textContent = t('aiTesting');
       let j = {};
       try {
-        j = await fetch('/api/ai-hub/test', { method: 'POST', headers: JSONH, body: JSON.stringify({ provider, apiKey: token, model: $('ai-model').value, baseUrl: $('ai-base-url').value, pin: $('ai-pin').value }) }).then(r => r.json());
+        j = await fetch('/api/ai-hub/test', { method: 'POST', headers: JSONH, body: JSON.stringify({ provider, apiKey: token, model, baseUrl, pin }) }).then(r => r.json());
       } catch (e) {
-        try { j = await fetch('/api/settings/test-ai', { method: 'POST', headers: JSONH, body: JSON.stringify({ provider, token, model: $('ai-model').value, local_base_url: $('ai-base-url').value, pin: $('ai-pin').value }) }).then(r => r.json()); }
-        catch (e2) { $('ai-msg').textContent = t('aiOffline'); return; }
+        try {
+          j = await fetch('/api/settings/test-ai', { method: 'POST', headers: JSONH, body: JSON.stringify({ provider, token, model, local_base_url: baseUrl, pin }) }).then(r => r.json());
+        } catch (e2) { $('ai-msg').textContent = t('aiOffline'); return; }
       }
       if (j.suggested_provider && $('ai-provider')) $('ai-provider').value = j.suggested_provider;
-      if (j.ok) { fillModels(j.models, j.verifiedModel || (j.models && (j.models[0].id || j.models[0]))); $('ai-msg').textContent = t('aiTokenOk') + (j.models || []).slice(0, 6).map(m => m.id || m).join(', '); }
-      else $('ai-msg').textContent = j.warning || t('aiBad');
+      if (j.provider && j.provider !== 'auto' && $('ai-provider')) try { $('ai-provider').value = j.provider; } catch (e) {}
+      if (j.ok) {
+        fillModels(j.models, j.verifiedModel || (j.models && j.models[0] && (j.models[0].id || j.models[0])));
+        const names = (j.models || []).slice(0, 6).map(m => m.id || m).filter(Boolean);
+        $('ai-msg').textContent = t('aiTokenOk') + names.join(', ');
+        // Persist verified key so chat can use it immediately
+        if (token) {
+          await fetch('/api/ai-hub/save', { method: 'POST', headers: JSONH, body: JSON.stringify({ provider: j.provider || provider, apiKey: token, model: j.verifiedModel || model, baseUrl, pin }) }).catch(() => {});
+          await fetch('/ai/key', { method: 'POST', headers: JSONH, body: JSON.stringify({ key: token, provider: j.provider || provider, model: j.verifiedModel || model, baseUrl, pin }) }).catch(() => {});
+          await status();
+        }
+      } else {
+        $('ai-msg').textContent = j.warning || j.error || t('aiBad');
+      }
     }
     async function ask() {
       const inp = $('ai-in'), msg = (inp.value || '').trim(); if (!msg) return; inp.value = ''; addLog('ai-log', '👤 ' + msg);

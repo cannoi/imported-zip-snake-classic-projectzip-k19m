@@ -66,3 +66,9 @@
 - App activity log API for diagnostics inside Settings/Logs.
 - Feedback donate accounts still come only from Hub sync (not hard-coded).
 - SHFH Hub ID: SHFH-CANNOI-0905428801 (built-in, no user input).
+
+## 3.0.1
+- Fix AI key entry: save key first via /api/ai-hub/save (no live network required to store).
+- /api/ai-hub/test never throws to the client; invalid keys return ok:false + warning.
+- provider auto resolved from token (AIza→gemini, gsk_→groq, sk-or-→openrouter, sk-ant-→anthropic).
+- Keys with whitespace trimmed; max length 500. Kernel reloadKey after hub save.
