@@ -72,3 +72,8 @@
 - /api/ai-hub/test never throws to the client; invalid keys return ok:false + warning.
 - provider auto resolved from token (AIza→gemini, gsk_→groq, sk-or-→openrouter, sk-ant-→anthropic).
 - Keys with whitespace trimmed; max length 500. Kernel reloadKey after hub save.
+
+## 3.1.0
+- Replaced AI/Feedback flow with the Futuristic Calculator pattern (lib/settings-store.js + lib/ai-gateway.js + /api/ai/settings|chat|status|catalog + /api/logs + SHFH proxy).
+- Old ai-bridge and provider-hub-bridge are no longer mounted.
+- Robot panel: Chat / Feedback / Settings / Logs. Donate accounts still come only from Hub sync.

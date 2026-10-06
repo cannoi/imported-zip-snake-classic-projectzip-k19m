@@ -379,7 +379,7 @@ $('gc-send').onclick = () => { sendChat($('gc-in').value); $('gc-in').value = ''
 $('gc-in').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('gc-send').click(); } else if (e.key === 'Escape') { e.stopPropagation(); openChat(false); } });
 EMOTES.forEach(em => { const b = document.createElement('button'); b.type = 'button'; b.textContent = em; b.onclick = () => sendChat('', em); $('emotes').appendChild(b); });
 addEventListener('keydown', e => { if (e.key === 'Enter' && !typing(e) && room && !document.querySelector('#screen-lobby.active')) { e.preventDefault(); openChat(true); } });
-setInterval(() => { $('chat-btn').style.display = room ? 'block' : 'none'; if (!room) { openChat(false); if ($('ai-box').classList.contains('open')) $('ai-toggle').click(); } }, 500);
+setInterval(() => { if ($('chat-btn')) $('chat-btn').style.display = room ? 'block' : 'none'; if (!room) { openChat(false); } }, 500);
 $('b-bet') && ($('b-bet').onclick = () => socket.emit('bet', { target: $('bet-target').value, amount: +$('bet-amt').value || 10 }));
 $('chat-send') && ($('chat-send').onclick = () => { sendChat($('chat-in').value); $('chat-in').value = ''; });
 $('chat-in') && $('chat-in').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('chat-send').click(); } });

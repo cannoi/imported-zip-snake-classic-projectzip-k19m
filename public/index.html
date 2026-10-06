@@ -117,58 +117,102 @@
 </div>
 <div id="chat-bar" class="chat-bar"><div id="emotes"></div>
  <div class="row"><input id="gc-in" class="field" maxlength="160" placeholder="Chat · @ai" data-ph="chatPh"><button type="button" id="gc-send" class="btn-secondary" data-i18n="send">SEND</button></div></div>
-<div id="ai-box">
-  <button type="button" id="ai-toggle" title="AI · Feedback · Settings"><img id="ai-icon" src="ai-icon.png" alt="AI"><span id="ai-badge" class="ai-badge" style="display:none">0</span></button>
-  <div id="ai-panel">
-    <div class="ai-tabs">
-      <button type="button" class="ai-tab on" data-tab="chat" id="tab-chat">Chat</button>
-      <button type="button" class="ai-tab" data-tab="feedback" id="tab-feedback">Feedback<span id="fb-tab-badge" class="ai-badge-sm" style="display:none">0</span></button>
-      <button type="button" class="ai-tab" data-tab="settings" id="tab-settings">Settings</button>
-      <button type="button" class="ai-tab" data-tab="logs" id="tab-logs">Logs</button>
-    </div>
-    <div class="ai-pane on" id="pane-chat">
-      <div class="ai-head"><span id="ai-chip" class="ai-chip">…</span></div>
-      <div id="ai-log"></div>
-      <div class="row"><input id="ai-in" class="field" maxlength="200" placeholder="Ask about the game…" data-ph="aiAsk"><button type="button" id="ai-send" class="btn-secondary" data-i18n="send">SEND</button></div>
-    </div>
-    <div class="ai-pane" id="pane-feedback">
-      <div id="fb-hub-notices" class="fb-notes"></div>
-      <div id="fb-donate" class="fb-donate" style="display:none"></div>
-      <div id="fb-update" class="fb-note" style="display:none"></div>
-      <select id="fb-type" class="field"><option value="bug">Bug</option><option value="idea">Idea</option><option value="other">Other</option></select>
-      <textarea id="fb-text" class="field" rows="3" maxlength="1000" placeholder="Describe the issue or idea…"></textarea>
-      <div id="fb-stars" class="row" aria-label="Rating"><button type="button" data-n="1">★</button><button type="button" data-n="2">★</button><button type="button" data-n="3">★</button><button type="button" data-n="4">★</button><button type="button" data-n="5">★</button></div>
-      <div class="row"><button type="button" id="fb-send" class="btn-primary">SEND FEEDBACK</button></div>
-      <p id="fb-msg" class="small"></p>
-      <div id="fb-pay" style="display:none">
-        <input id="fb-txn" class="field" maxlength="120" placeholder="Transaction ID" autocomplete="off">
-        <input id="fb-method" class="field" maxlength="30" placeholder="Method (e.g. pi)" autocomplete="off">
-        <input id="fb-amount" class="field" maxlength="20" placeholder="Amount" autocomplete="off">
-        <div class="row"><button type="button" id="fb-paysend" class="btn-primary">SEND</button><button type="button" id="fb-paycancel" class="btn-back">CANCEL</button></div>
+<!-- Single AI FAB — robot icon + unread badge -->
+    <button type="button" class="ai-fab" id="aiFab" title="AI · Feedback · Settings" aria-label="AI">
+      <img src="/ai-icon.png" alt="AI" class="ai-fab-img">
+      <span class="ai-fab-dot" id="aiStatusDot"></span>
+      <span class="ai-badge" id="aiBadge" hidden>0</span>
+    </button>
+  </div>
+
+  <!-- Unified AI Panel: Chat | Feedback | Settings | Logs -->
+  <div class="panel-overlay" id="aiOverlay" hidden>
+    <div class="panel ai-panel" id="aiPanel">
+      <div class="panel-header">
+        <span class="panel-title">✦ AI</span>
+        <button type="button" class="panel-close" id="aiClose" aria-label="Close">×</button>
       </div>
-      <div id="fb-status" class="small"></div>
-    </div>
-    <div class="ai-pane" id="pane-settings">
-      <p class="small">AI provider key (saved on this device/server only).</p>
-      <select id="ai-provider" class="field" aria-label="AI provider">
-        <option value="auto">Auto / Detect</option>
-        <option value="openai">OpenAI</option><option value="deepseek">DeepSeek</option><option value="groq">Groq</option>
-        <option value="openrouter">OpenRouter</option><option value="mistral">Mistral</option><option value="xai">xAI</option>
-        <option value="gemini">Google Gemini</option><option value="anthropic">Anthropic</option>
-        <option value="ollama">Ollama (local)</option><option value="lmstudio">LM Studio (local)</option>
-        <option value="local">Local OpenAI-compatible</option><option value="custom">Custom OpenAI-compatible</option>
-      </select>
-      <select id="ai-model" class="field" aria-label="Model"><option value="">Auto model</option></select>
-      <div class="row"><input id="ai-token" class="field" type="password" maxlength="300" placeholder="API key / token" autocomplete="off"><button type="button" id="ai-check" class="btn-secondary">CHECK</button></div>
-      <input id="ai-base-url" class="field" maxlength="500" placeholder="Base URL (custom / local)" autocomplete="off">
-      <input id="ai-pin" class="field" type="password" maxlength="40" placeholder="Admin PIN" autocomplete="off" style="display:none">
-      <p id="ai-msg" class="small"></p>
-      <div class="row"><button type="button" id="ai-save" class="btn-primary">SAVE &amp; TEST</button><button type="button" id="ai-remove" class="btn-secondary">REMOVE KEY</button></div>
-    </div>
-    <div class="ai-pane" id="pane-logs">
-      <div class="row"><button type="button" id="log-refresh" class="btn-secondary">REFRESH</button><button type="button" id="log-clear" class="btn-secondary">CLEAR</button></div>
-      <pre id="app-log-view" class="app-log-view">—</pre>
+      <div class="panel-tabs" id="panelTabs">
+        <button type="button" class="tab active" data-tab="chat">Chat</button>
+        <button type="button" class="tab" data-tab="feedback">Feedback <span class="tab-badge" id="fbTabBadge" hidden></span></button>
+        <button type="button" class="tab" data-tab="settings">Settings</button>
+        <button type="button" class="tab" data-tab="logs">Logs</button>
+      </div>
+
+      <!-- Chat tab -->
+      <div class="tab-pane active" id="tab-chat">
+        <div class="panel-body" id="aiChat"></div>
+        <div class="panel-footer">
+          <input type="text" id="aiInput" placeholder="Hỏi về game, điểm, cách chơi…" autocomplete="off" enterkeyhint="send">
+          <button type="button" id="aiSend" aria-label="Send">➤</button>
+        </div>
+        <div class="ai-status-bar" id="aiStatusBar">AI: checking…</div>
+      </div>
+
+      <!-- Feedback tab -->
+      <div class="tab-pane" id="tab-feedback">
+        <div class="panel-body fb-body">
+          <div id="fbNotices" class="fb-notices"></div>
+          <div id="fbDonate" class="fb-donate" hidden></div>
+          <label class="fb-label">Type</label>
+          <select id="fbType">
+            <option value="improvement">Improvement</option>
+            <option value="bug">Bug</option>
+            <option value="question">Question</option>
+          </select>
+          <label class="fb-label">Rating</label>
+          <div class="fb-stars" id="fbStars">
+            <button type="button" data-r="1">★</button>
+            <button type="button" data-r="2">★</button>
+            <button type="button" data-r="3">★</button>
+            <button type="button" data-r="4">★</button>
+            <button type="button" data-r="5">★</button>
+          </div>
+          <label class="fb-label">Message</label>
+          <textarea id="fbMessage" rows="3" placeholder="Phản hồi của bạn…" maxlength="2000"></textarea>
+          <p class="fb-hint">Chỉ gửi nội dung bạn nhập. Không cần mật khẩu / API key.</p>
+          <button type="button" class="fb-submit" id="fbSubmit">Send Feedback</button>
+          <p class="fb-status" id="fbStatus"></p>
+        </div>
+      </div>
+
+      <!-- Settings tab -->
+      <div class="tab-pane" id="tab-settings">
+        <div class="panel-body settings-body">
+          <label class="fb-label">Provider</label>
+          <select id="setProvider"></select>
+          <label class="fb-label">API Key</label>
+          <input type="password" id="setApiKey" placeholder="sk-… (không hiện lại sau khi lưu)" autocomplete="off">
+          <p class="fb-hint" id="setKeyHint">Key hiện tại: (chưa có)</p>
+          <label class="fb-label">Base URL <small>(bắt buộc cho Custom / Local)</small></label>
+          <input type="text" id="setBaseUrl" placeholder="https://api.example.com/v1">
+          <label class="fb-label">Model</label>
+          <input type="text" id="setModel" placeholder="auto" value="auto">
+          <label class="fb-label">Mode</label>
+          <select id="setMode">
+            <option value="cloud_enabled">Cloud Enabled</option>
+            <option value="prefer_local">Prefer Local</option>
+            <option value="local_only">Local Only</option>
+            <option value="balanced">Balanced</option>
+            <option value="custom">Custom</option>
+          </select>
+          <button type="button" class="fb-submit" id="setSave">Save Settings</button>
+          <p class="fb-status" id="setStatus"></p>
+        </div>
+      </div>
+
+      <!-- Logs tab -->
+      <div class="tab-pane" id="tab-logs">
+        <div class="panel-body logs-body">
+          <div class="logs-toolbar">
+            <button type="button" class="ws-btn" id="logsRefresh">Refresh</button>
+            <button type="button" class="ws-btn" id="logsClear">Clear</button>
+          </div>
+          <pre id="logsView" class="logs-view">Loading…</pre>
+        </div>
+      </div>
     </div>
   </div>
-</div>
-<script src="/socket.io/socket.io.js"></script><script src="communication-pause.js"></script><script src="game.js"></script><script src="feedback.js"></script><img class="paf-made-by" src="/made-by.png" alt="Made with App Builder — Pi SoloHost"></body></html>
+
+  
+<script src="/socket.io/socket.io.js"></script><script src="communication-pause.js"></script><script src="game.js"></script><script src="shfh-client.js"></script><script src="ai-panel.js"></script><img class="paf-made-by" src="/made-by.png" alt="Made with App Builder — Pi SoloHost"></body></html>

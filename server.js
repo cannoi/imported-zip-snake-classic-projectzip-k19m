@@ -364,14 +364,8 @@ refreshPublicIp();
 app.get('/api/info', (q, res) => res.json(hostInfo(q)));
 app.get('/health', (q, s) => s.status(200).send('OK'));
 let aiApi = null;
-try { aiApi = require('./ai-bridge').mount(app, { rooms, scores, io, refSay, startGame, lobby }); } catch (e) { console.error('AI kernel skip', e.message); }
-try {
-  const hubBridge = require('./provider-hub-bridge');
-  const aiBridge = require('./ai-bridge');
-  hubBridge.mount(app, {
-    onKeySaved: (saved) => { try { if (aiBridge.reloadKey) aiBridge.reloadKey(saved); } catch (e) {} }
-  });
-} catch (e) { console.error('AI provider hub skip', e.message); }
+// AI + Feedback flow replaced by calculator-style gateway (lib/snake-ai-routes.js). Old ai-bridge / provider-hub-bridge not mounted.
+try { require('./lib/snake-ai-routes').mount(app); } catch (e) { console.error('snake-ai-routes skip', e.message); }
 try {
   const appLog = require('./app-log');
   appLog.info('server', 'Snake Arcade started');
