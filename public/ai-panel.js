@@ -40,6 +40,7 @@ function openAI() {
   refreshAiStatus();
   // default to chat
   document.querySelector('.tab[data-tab="chat"]')?.click();
+  loadSettingsForm();
   setTimeout(() => aiInput.focus(), 100);
 }
 function closeAI() {
@@ -274,43 +275,25 @@ function setUnreadBadge(n) {
   }
 }
 
+function flattenDonate(src, prefix, out) {
+  if (src == null) return;
+  if (typeof src === 'string' || typeof src === 'number') { if (String(src).trim()) out.push([prefix || 'info', String(src)]); return; }
+  if (Array.isArray(src)) { src.forEach((v, i) => flattenDonate(v, prefix + ' ' + (i + 1), out)); return; }
+  if (typeof src === 'object') {
+    Object.keys(src).forEach((k) => flattenDonate(src[k], prefix ? prefix + ' · ' + k : k, out));
+  }
+}
 function renderDonate(donate) {
   const box = document.getElementById('fbDonate');
-  if (!box || !donate) { if (box) box.hidden = true; return; }
+  if (!box) return;
+  const rows = [];
+  flattenDonate(donate, '', rows);
+  if (!rows.length) { box.hidden = true; box.innerHTML = ''; return; }
   box.hidden = false;
-  let html = '<strong>Ủng hộ / Donate</strong><br>';
-  // Show all useful fields from hub
-  const fields = [
-    ['author', 'Tác giả'],
-    ['name', 'Tên'],
-    ['label', 'Nhãn'],
-    ['url', 'Link'],
-    ['address', 'Địa chỉ'],
-    ['wallet', 'Ví'],
-    ['pi', 'Pi'],
-    ['note', 'Ghi chú'],
-    ['message', 'Thông báo'],
-  ];
-  let any = false;
-  for (const [k, label] of fields) {
-    if (donate[k]) {
-      any = true;
-      if (k === 'url') {
-        html += `${label}: <a href="${escapeHtml(donate[k])}" target="_blank" rel="noopener">${escapeHtml(donate[k])}</a><br>`;
-      } else {
-        html += `${label}: ${escapeHtml(String(donate[k]))}<br>`;
-      }
-    }
-  }
-  // Also dump any other string fields
-  for (const [k, v] of Object.entries(donate)) {
-    if (fields.some((f) => f[0] === k)) continue;
-    if (typeof v === 'string' && v.trim()) {
-      any = true;
-      html += `${escapeHtml(k)}: ${escapeHtml(v)}<br>`;
-    }
-  }
-  if (!any) html += '<small>Hub chưa cung cấp thông tin donate.</small>';
+  let html = '<strong>Ủng hộ tác giả</strong><br>';
+  rows.slice(0, 12).forEach(([k, v]) => {
+    html += '<div class="fb-acc"><div class="fb-k">' + escapeHtml(k) + '</div><code class="fb-val">' + escapeHtml(v) + '</code></div>';
+  });
   box.innerHTML = html;
 }
 
@@ -378,7 +361,7 @@ async function initFeedback() {
     const count = (sync.notices?.length || 0) +
       (sync.actions || []).filter((a) => a.kind === 'update' || a.kind === 'unpaid_nudge').length;
     setUnreadBadge(count);
-    renderDonate(sync.donate);
+    renderDonate(sync.donate || (sync.policy && (sync.policy.donate || sync.policy.accounts || sync.policy.support)));
     renderNotices(sync.actions, sync.notices);
   } catch (e) {
     console.warn('SHFH init', e);
@@ -414,6 +397,8 @@ async function submitFeedback() {
 }
 
 /* ===== Init ===== */
-update();
 refreshAiStatus();
+loadSettingsForm();
 initFeedback();
+setInterval(() => { initFeedback().catch(() => {}); }, 45000);
+

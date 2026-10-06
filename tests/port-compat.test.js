@@ -38,7 +38,7 @@ async function run(env, label) {
   ok('starts and /health answers on PORT=' + any, a.up);
   ok('/health body OK', (await get(any, '/health')).body === 'OK');
   const page = await get(any, '/'); ok('GET / serves the game page', page.code === 200 && /Snake Arcade/.test(page.body) && /text\/html/.test(page.type));
-  ok('static assets served', (await get(any, '/game.js')).code === 200 && (await get(any, '/feedback.js')).code === 200);
+  ok('static assets served', (await get(any, '/game.js')).code === 200 && (await get(any, '/ai-panel.js')).code === 200);
   ok('/api/shfh-config answers', (() => { return true; })());
   const cfg = JSON.parse((await get(any, '/api/shfh-config')).body); ok('shfh-config has appId/version', cfg.appId === 'snake-arcade' && /^\d+\.\d+\.\d+$/.test(cfg.version) && cfg.platform === 'solohost');
   ok('built-in Hub parameters need no declaration', cfg.hubId === 'SHFH-CANNOI-0905428801' && cfg.hubUrl === 'http://14.176.78.46:8090' && cfg.formUrl === 'http://14.176.78.46:8090/feedback' && cfg.ingestToken === 'cannoi_7Kp9xV2mQ8rN4tY6cL3wA5zD1eF0uH9' && cfg.enabled === true);

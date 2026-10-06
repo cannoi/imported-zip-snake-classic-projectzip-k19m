@@ -1,0 +1,3 @@
+{"t":"2026-10-06T09:27:04.638Z","level":"info","source":"ai-hub","message":"key saved provider=deepseek"}
+{"t":"2026-10-06T09:27:06.527Z","level":"warn","source":"ai-hub","message":"testConnection error deepseek","extra":"API key is invalid."}
+{"t":"2026-10-06T09:27:08.061Z","level":"warn","source":"ai-hub","message":"testConnection error gemini","extra":"No usable model is known for this provider."}

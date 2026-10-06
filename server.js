@@ -366,15 +366,6 @@ app.get('/health', (q, s) => s.status(200).send('OK'));
 let aiApi = null;
 // AI + Feedback flow replaced by calculator-style gateway (lib/snake-ai-routes.js). Old ai-bridge / provider-hub-bridge not mounted.
 try { require('./lib/snake-ai-routes').mount(app); } catch (e) { console.error('snake-ai-routes skip', e.message); }
-try {
-  const appLog = require('./app-log');
-  appLog.info('server', 'Snake Arcade started');
-  app.get('/api/app-log', (req, res) => res.json({ ok: true, lines: appLog.list(+(req.query.limit || 120)) }));
-  app.post('/api/app-log/clear', (req, res) => { appLog.clear(); res.json({ ok: true }); });
-  const _err = console.error, _warn = console.warn;
-  console.error = (...a) => { try { appLog.error('console', a.map(String).join(' ')); } catch (e) {} return _err.apply(console, a); };
-  console.warn = (...a) => { try { appLog.warn('console', a.map(String).join(' ')); } catch (e) {} return _warn.apply(console, a); };
-} catch (e) { console.error('app-log skip', e.message); }
 
 const humansOf = room => [...room.players.values()].filter(p => !p.bot);
 function rehost(room) { const on = humansOf(room).filter(p => !p.off); if (on.length && !on.some(p => p.id === room.host)) room.host = on[0].id; }
