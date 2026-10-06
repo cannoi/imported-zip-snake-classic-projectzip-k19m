@@ -4,7 +4,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --check server.js && node --check public/game.js && node --check public/ai-panel.js && node --check lib/ai-module/ai-service.js && node --check lib/feedback-module/feedback-service.js && node tests/port-compat.test.js"
+    "test": "node --check server.js && node --check public/game.js && node --check public/ai-panel.js && node --check public/ai-module/ai-module.js && node --check public/feedback-module/feedback-module.js && node --check ai-module/server/ai-service.js && node --check ai-module/server/provider-engine.js && node --check ai-module/server/routes.js && node --check feedback-module/server/feedback-service.js && node tests/provider-engine.test.js && node tests/provider-mock.test.js && node tests/module-smoke.test.js && node tests/module-contract.test.js && node tests/port-compat.test.js"
   },
   "engines": { "node": ">=18" },
   "dependencies": { "express": "^4.18.2", "socket.io": "^4.7.5" }

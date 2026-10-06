@@ -15,7 +15,7 @@ ok('SoloHost kit has no ports: mapping (Port Manager publishes)', !/^\s*ports:/m
 const sh = read('solohost/docker-compose.yml'); ok('SoloHost kit: GHCR image + PORT/HOST env', /image:\s*ghcr\.io\/cannoi\/imported-zip-snake-classic-projectzip-k19m:latest/.test(sh) && /PORT:\s*"8080"/.test(sh) && /HOST:\s*"0\.0\.0\.0"/.test(sh));
 ok('SoloHost kit: data volume keeps scores + AI token', /snake-data:\/app\/data/.test(sh));
 ok('SoloHost primary-UI label kept', /pi\.ui\.primary:\s*"true"/.test(read('solohost/docker-compose.yml')));
-ok('.env: PORT=8080, no HOST_PORT', /^PORT=8080$/m.test(read('.env')) && !/^HOST_PORT/m.test(read('.env')));
+ok('.env.example: PORT=8080, no HOST_PORT', /^PORT=8080$/m.test(read('.env.example')) && !/^HOST_PORT/m.test(read('.env.example')));
 ok('Dockerfile EXPOSE 8080 + health on $PORT', /EXPOSE 8080/.test(read('Dockerfile')) && /127\.0\.0\.1:\$\{PORT:-8080\}\/health/.test(read('Dockerfile')));
 const srv = read('server.js'); ok('server reads process.env.PORT || 8080', /process\.env\.PORT\) \|\| 8080|process\.env\.PORT \|\| 8080/.test(srv));
 ok('server listens on 0.0.0.0', /listen\(PORT, '0\.0\.0\.0'/.test(srv)); ok('server no longer reads HOST_PORT', !/HOST_PORT/.test(srv));
