@@ -1,0 +1,10 @@
+{
+  "name": "@solohost/ai-provider-hub",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Reusable AI provider hub for SoloHost / Pi Network apps (Gemini, DeepSeek, Custom/Personal AI Hub, OpenAI-compatible).",
+  "main": "index.js",
+  "exports": { ".": "./index.js" },
+  "engines": { "node": ">=18" },
+  "license": "MIT"
+}

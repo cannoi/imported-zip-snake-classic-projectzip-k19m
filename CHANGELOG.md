@@ -58,3 +58,11 @@
 
 ## 2.9.4
 - ai-app-kernel 1.1.3. POST /api/settings/test-ai and /api/settings/peek-token. Check token button fills model list. Strong token hints never sent to the wrong provider.
+
+## 3.0.0
+- Unified AI button panel: Chat · Feedback · Settings · Logs (no second feedback system).
+- AI button uses robot icon; unread Feedback Hub notices show a badge until opened.
+- solohost-ai-provider-hub v1.0.0 for full provider catalog (incl. Anthropic + Custom).
+- App activity log API for diagnostics inside Settings/Logs.
+- Feedback donate accounts still come only from Hub sync (not hard-coded).
+- SHFH Hub ID: SHFH-CANNOI-0905428801 (built-in, no user input).

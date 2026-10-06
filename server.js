@@ -306,7 +306,7 @@ app.use(express.static('public'));
 const APP_VERSION = (() => { try { return require('./package.json').version || '0.0.0'; } catch (e) { return '0.0.0'; } })();
 // SoloHost Feedback Hub: built-in defaults (no .env needed); SHFH_* env variables override them.
 // The ingest token is a *client* token by design of the Hub SDK: any browser that opens the game can see it. Rotate it on the Hub if abused.
-const SHFH = { hubId: 'FH-CANNOI-0905428801SH', hubUrl: 'http://14.176.78.46:8090', ingestToken: 'cannoi_7Kp9xV2mQ8rN4tY6cL3wA5zD1eF0uH9' };
+const SHFH = { hubId: 'SHFH-CANNOI-0905428801', hubUrl: 'http://14.176.78.46:8090', ingestToken: 'cannoi_7Kp9xV2mQ8rN4tY6cL3wA5zD1eF0uH9' };
 app.get('/api/shfh-config', (req, res) => {
   const hubUrl = String(process.env.SHFH_HUB_URL || SHFH.hubUrl).replace(/\/+$/, '');
   res.json({ hubId: process.env.SHFH_HUB_ID || SHFH.hubId, hubUrl, formUrl: hubUrl + '/feedback', ingestToken: process.env.SHFH_INGEST_TOKEN != null ? process.env.SHFH_INGEST_TOKEN : SHFH.ingestToken,
@@ -365,6 +365,16 @@ app.get('/api/info', (q, res) => res.json(hostInfo(q)));
 app.get('/health', (q, s) => s.status(200).send('OK'));
 let aiApi = null;
 try { aiApi = require('./ai-bridge').mount(app, { rooms, scores, io, refSay, startGame, lobby }); } catch (e) { console.error('AI kernel skip', e.message); }
+try { require('./provider-hub-bridge').mount(app); } catch (e) { console.error('AI provider hub skip', e.message); }
+try {
+  const appLog = require('./app-log');
+  appLog.info('server', 'Snake Arcade started');
+  app.get('/api/app-log', (req, res) => res.json({ ok: true, lines: appLog.list(+(req.query.limit || 120)) }));
+  app.post('/api/app-log/clear', (req, res) => { appLog.clear(); res.json({ ok: true }); });
+  const _err = console.error, _warn = console.warn;
+  console.error = (...a) => { try { appLog.error('console', a.map(String).join(' ')); } catch (e) {} return _err.apply(console, a); };
+  console.warn = (...a) => { try { appLog.warn('console', a.map(String).join(' ')); } catch (e) {} return _warn.apply(console, a); };
+} catch (e) { console.error('app-log skip', e.message); }
 
 const humansOf = room => [...room.players.values()].filter(p => !p.bot);
 function rehost(room) { const on = humansOf(room).filter(p => !p.off); if (on.length && !on.some(p => p.id === room.host)) room.host = on[0].id; }

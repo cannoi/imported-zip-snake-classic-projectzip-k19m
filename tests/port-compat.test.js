@@ -41,7 +41,7 @@ async function run(env, label) {
   ok('static assets served', (await get(any, '/game.js')).code === 200 && (await get(any, '/feedback.js')).code === 200);
   ok('/api/shfh-config answers', (() => { return true; })());
   const cfg = JSON.parse((await get(any, '/api/shfh-config')).body); ok('shfh-config has appId/version', cfg.appId === 'snake-arcade' && /^\d+\.\d+\.\d+$/.test(cfg.version) && cfg.platform === 'solohost');
-  ok('built-in Hub parameters need no declaration', cfg.hubId === 'FH-CANNOI-0905428801SH' && cfg.hubUrl === 'http://14.176.78.46:8090' && cfg.formUrl === 'http://14.176.78.46:8090/feedback' && cfg.ingestToken === 'cannoi_7Kp9xV2mQ8rN4tY6cL3wA5zD1eF0uH9' && cfg.enabled === true);
+  ok('built-in Hub parameters need no declaration', cfg.hubId === 'SHFH-CANNOI-0905428801' && cfg.hubUrl === 'http://14.176.78.46:8090' && cfg.formUrl === 'http://14.176.78.46:8090/feedback' && cfg.ingestToken === 'cannoi_7Kp9xV2mQ8rN4tY6cL3wA5zD1eF0uH9' && cfg.enabled === true);
   const publicPort = 31877;                                   // a different "public" port than the container port, like a SoloHost mapping
   const info = JSON.parse((await get(any, '/api/info', { Host: '192.168.1.50:' + publicPort })).body);
   ok('invite URLs follow the PUBLIC port the browser used', info.publicUrl === 'http://192.168.1.50:' + publicPort && info.lanUrls.every(u => u.endsWith(':' + publicPort)) && info.port === any);

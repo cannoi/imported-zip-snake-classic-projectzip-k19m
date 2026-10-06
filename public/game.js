@@ -384,26 +384,41 @@ $('b-bet') && ($('b-bet').onclick = () => socket.emit('bet', { target: $('bet-ta
 $('chat-send') && ($('chat-send').onclick = () => { sendChat($('chat-in').value); $('chat-in').value = ''; });
 $('chat-in') && $('chat-in').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('chat-send').click(); } });
 
-// ---- AI referee button: opens the panel; asks for a token when none is configured ----
+// ---- AI panel: Chat · Feedback · Settings · Logs (single entry button) ----
 (function aiBox() {
   function init() {
     const box = $('ai-box'); if (!box) return;
-    const icon = $('ai-icon'); if (icon) icon.onerror = () => { icon.onerror = () => { icon.src = 'made-by.png'; }; icon.src = '/ai/logo.png'; };
-    const JSONH = { 'Content-Type': 'application/json' }, modal = $('ai-modal'), hist = [];
+    const icon = $('ai-icon'); if (icon) icon.onerror = () => { icon.src = 'made-by.png'; };
+    const JSONH = { 'Content-Type': 'application/json' }, hist = [];
     let info = { hasKey: false };
+
+    function showTab(name) {
+      document.querySelectorAll('.ai-tab').forEach(b => b.classList.toggle('on', b.getAttribute('data-tab') === name));
+      document.querySelectorAll('.ai-pane').forEach(p => p.classList.toggle('on', p.id === 'pane-' + name));
+      if (name === 'logs') loadLogs();
+      if (name === 'feedback' && window.__fbMarkRead) window.__fbMarkRead();
+    }
+    document.querySelectorAll('.ai-tab').forEach(b => b.onclick = () => showTab(b.getAttribute('data-tab')));
+
     async function status() {
       try { info = await fetch('/ai/status').then(r => r.json()); } catch (e) { info = { hasKey: false }; }
       const active = !!info.active;
       const label = info.provider ? info.provider + (info.model ? ' · ' + info.model : '') : 'local';
-      if ($('ai-provider') && info.provider) $('ai-provider').value = info.provider;
-      $('ai-chip').textContent = active ? t('aiOn').replace('{0}', label) : t('aiLocal');
-      $('ai-chip').classList.toggle('on', active);
-      $('ai-pin').style.display = info.pinRequired ? '' : 'none';
-      $('ai-remove').style.display = info.hasKey && info.source === 'saved' ? '' : 'none';
+      if ($('ai-provider') && info.provider) try { $('ai-provider').value = info.provider; } catch (e) {}
+      if ($('ai-chip')) { $('ai-chip').textContent = active ? t('aiOn').replace('{0}', label) : t('aiLocal'); $('ai-chip').classList.toggle('on', active); }
+      if ($('ai-pin')) $('ai-pin').style.display = info.pinRequired ? '' : 'none';
+      if ($('ai-remove')) $('ai-remove').style.display = info.hasKey && info.source === 'saved' ? '' : 'none';
       return info;
     }
-    function openModal(msg) { communicationPause.open('ai-modal'); $('ai-msg').textContent = msg || ''; $('ai-token').value = ''; modal.classList.add('open'); setTimeout(() => $('ai-token').focus(), 50); }
-    const closeModal = () => { modal.classList.remove('open'); communicationPause.close('ai-modal'); };
+    function fillModels(list, picked) {
+      const sel = $('ai-model'); if (!sel) return;
+      const cur = picked || sel.value || '';
+      sel.innerHTML = '';
+      const auto = document.createElement('option'); auto.value = ''; auto.textContent = 'Auto'; sel.appendChild(auto);
+      (list || []).forEach(m => { const id = typeof m === 'string' ? m : (m.id || m); if (!id) return; const o = document.createElement('option'); o.value = id; o.textContent = id; sel.appendChild(o); });
+      if (cur && ![...sel.options].some(o => o.value === cur)) { const o = document.createElement('option'); o.value = cur; o.textContent = cur; sel.appendChild(o); }
+      sel.value = cur;
+    }
     async function save() {
       const provider = ($('ai-provider').value || 'auto').trim();
       const model = $('ai-model').value.trim();
@@ -413,64 +428,82 @@ $('chat-in') && $('chat-in').addEventListener('keydown', e => { if (e.key === 'E
       if (!localProvider && key.length < 8) { $('ai-msg').textContent = t('aiTooShort'); return; }
       $('ai-msg').textContent = t('aiTesting');
       let r, j = {};
-      try { r = await fetch('/ai/key', { method: 'POST', headers: JSONH, body: JSON.stringify({ key, provider, model, baseUrl, pin: $('ai-pin').value }) }); j = await r.json().catch(() => ({})); }
-      catch (e) { $('ai-msg').textContent = t('aiOffline'); return; }
-      if (!r.ok) { $('ai-msg').textContent = j.error || t('aiBad'); return; }
+      try {
+        // Prefer provider-hub test when available (full catalog incl. custom/anthropic)
+        const probe = await fetch('/api/ai-hub/test', { method: 'POST', headers: JSONH, body: JSON.stringify({ provider, apiKey: key, baseUrl, model, pin: $('ai-pin').value }) }).then(x => x.json()).catch(() => null);
+        if (probe && probe.ok) {
+          fillModels(probe.models, probe.verifiedModel);
+          r = await fetch('/ai/key', { method: 'POST', headers: JSONH, body: JSON.stringify({ key, provider, model: probe.verifiedModel || model, baseUrl, pin: $('ai-pin').value }) });
+          j = await r.json().catch(() => ({}));
+        } else {
+          r = await fetch('/ai/key', { method: 'POST', headers: JSONH, body: JSON.stringify({ key, provider, model, baseUrl, pin: $('ai-pin').value }) });
+          j = await r.json().catch(() => ({}));
+          if (probe && probe.warning) $('ai-msg').textContent = probe.warning;
+        }
+      } catch (e) { $('ai-msg').textContent = t('aiOffline'); return; }
+      if (r && !r.ok) { $('ai-msg').textContent = j.error || t('aiBad'); return; }
       $('ai-token').value = '';
       const test = await fetch('/ai/chat', { method: 'POST', headers: JSONH, body: JSON.stringify({ message: 'Reply with one short word: ready', ctx: { code: room && room.code } }) }).then(x => x.json()).catch(() => null);
       if (test && test.keyError) { await fetch('/ai/key/clear', { method: 'POST', headers: JSONH, body: JSON.stringify({ pin: $('ai-pin').value }) }).catch(() => {}); await status(); $('ai-msg').textContent = t('aiBad') + (test.note ? ' — ' + test.note.slice(0, 120) : ''); return; }
       await status();
-      if (test && test.provider !== 'local-referee') { $('ai-msg').textContent = t('aiSaved'); addLog('ai-log', '🤖 ' + (test.text || '')); setTimeout(closeModal, 900); }
+      if (test && test.provider !== 'local-referee') { $('ai-msg').textContent = t('aiSaved'); addLog('ai-log', '🤖 ' + (test.text || '')); }
       else $('ai-msg').textContent = t('aiBad') + (test && test.note ? ' — ' + test.note.slice(0, 120) : '');
-    }
-    async function ask() {
-      const inp = $('ai-in'), msg = (inp.value || '').trim(); if (!msg) return; inp.value = ''; addLog('ai-log', '👤 ' + msg);
-      try {
-        const d = await fetch('/ai/chat', { method: 'POST', headers: JSONH, body: JSON.stringify({ message: msg, history: hist.slice(-8), ctx: { code: room && room.code } }) }).then(r => r.json());
-        addLog('ai-log', '🤖 ' + (d.text || '')); toast(d.text || 'AI'); hist.push({ role: 'user', content: msg }, { role: 'assistant', content: d.text || '' });
-        if (d.needKey && !modal.classList.contains('open')) { await status(); openModal(t('aiNeedKey')); }
-      } catch (e) { toast(t('aiOffline')); }
-    }
-    $('ai-toggle').onclick = async () => {
-      await status(); const opening = !box.classList.contains('open'); box.classList.toggle('open');
-      if (opening) communicationPause.open('ai'); else communicationPause.close('ai');
-      if (opening && !info.active) openModal(t('aiNeedKey'));
-    };
-    $('ai-key-btn').onclick = async () => { await status(); openModal(''); };
-    function fillModels(list, picked) {
-      const sel = $('ai-model'); if (!sel) return;
-      const cur = picked || sel.value || '';
-      sel.innerHTML = '';
-      const auto = document.createElement('option'); auto.value = ''; auto.textContent = 'Auto'; sel.appendChild(auto);
-      (list || []).forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; sel.appendChild(o); });
-      if (cur && ![...sel.options].some(o => o.value === cur)) { const o = document.createElement('option'); o.value = cur; o.textContent = cur; sel.appendChild(o); }
-      sel.value = cur;
     }
     async function checkToken() {
       const token = $('ai-token').value.trim();
       const provider = ($('ai-provider').value || 'auto').trim();
       $('ai-msg').textContent = t('aiTesting');
       let j = {};
-      try { j = await fetch('/api/settings/test-ai', { method: 'POST', headers: JSONH, body: JSON.stringify({ provider, token, model: $('ai-model').value, local_base_url: $('ai-base-url').value, pin: $('ai-pin').value }) }).then(r => r.json()); }
-      catch (e) { $('ai-msg').textContent = t('aiOffline'); return; }
+      try {
+        j = await fetch('/api/ai-hub/test', { method: 'POST', headers: JSONH, body: JSON.stringify({ provider, apiKey: token, model: $('ai-model').value, baseUrl: $('ai-base-url').value, pin: $('ai-pin').value }) }).then(r => r.json());
+      } catch (e) {
+        try { j = await fetch('/api/settings/test-ai', { method: 'POST', headers: JSONH, body: JSON.stringify({ provider, token, model: $('ai-model').value, local_base_url: $('ai-base-url').value, pin: $('ai-pin').value }) }).then(r => r.json()); }
+        catch (e2) { $('ai-msg').textContent = t('aiOffline'); return; }
+      }
       if (j.suggested_provider && $('ai-provider')) $('ai-provider').value = j.suggested_provider;
-      if (j.ok) { fillModels(j.models, j.models && j.models[0]); $('ai-msg').textContent = t('aiTokenOk') + (j.models || []).slice(0, 6).join(', '); }
+      if (j.ok) { fillModels(j.models, j.verifiedModel || (j.models && (j.models[0].id || j.models[0]))); $('ai-msg').textContent = t('aiTokenOk') + (j.models || []).slice(0, 6).map(m => m.id || m).join(', '); }
       else $('ai-msg').textContent = j.warning || t('aiBad');
     }
-    $('ai-save').onclick = save; $('ai-cancel').onclick = closeModal; $('ai-check').onclick = checkToken;
-    $('ai-token').addEventListener('paste', () => setTimeout(async () => {
+    async function ask() {
+      const inp = $('ai-in'), msg = (inp.value || '').trim(); if (!msg) return; inp.value = ''; addLog('ai-log', '👤 ' + msg);
+      try {
+        const d = await fetch('/ai/chat', { method: 'POST', headers: JSONH, body: JSON.stringify({ message: msg, history: hist.slice(-8), ctx: { code: room && room.code } }) }).then(r => r.json());
+        addLog('ai-log', '🤖 ' + (d.text || '')); toast(d.text || 'AI'); hist.push({ role: 'user', content: msg }, { role: 'assistant', content: d.text || '' });
+        if (d.needKey) { showTab('settings'); await status(); $('ai-msg').textContent = t('aiNeedKey'); }
+      } catch (e) { toast(t('aiOffline')); }
+    }
+    async function loadLogs() {
+      const view = $('app-log-view'); if (!view) return;
+      try {
+        const d = await fetch('/api/app-log?limit=150').then(r => r.json());
+        const lines = (d.lines || []).map(l => '[' + (l.t || '').slice(11, 19) + '] ' + (l.level || '') + '/' + (l.source || '') + ' ' + (l.message || '') + (l.extra ? ' · ' + l.extra : ''));
+        view.textContent = lines.length ? lines.join('\\n') : '— no logs —';
+        view.scrollTop = view.scrollHeight;
+      } catch (e) { view.textContent = 'Could not load logs'; }
+    }
+
+    $('ai-toggle').onclick = async () => {
+      await status();
+      const opening = !box.classList.contains('open');
+      box.classList.toggle('open');
+      if (opening) { communicationPause.open('ai'); showTab('chat'); } else communicationPause.close('ai');
+    };
+    if ($('ai-save')) $('ai-save').onclick = save;
+    if ($('ai-check')) $('ai-check').onclick = checkToken;
+    if ($('ai-remove')) $('ai-remove').onclick = async () => { await fetch('/ai/key/clear', { method: 'POST', headers: JSONH, body: JSON.stringify({ pin: $('ai-pin').value }) }).catch(() => {}); await fetch('/api/ai-hub/remove', { method: 'POST', headers: JSONH, body: JSON.stringify({ pin: $('ai-pin').value }) }).catch(() => {}); await status(); };
+    if ($('ai-send')) $('ai-send').onclick = ask;
+    if ($('ai-in')) $('ai-in').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ask(); } });
+    if ($('log-refresh')) $('log-refresh').onclick = loadLogs;
+    if ($('log-clear')) $('log-clear').onclick = async () => { await fetch('/api/app-log/clear', { method: 'POST' }).catch(() => {}); loadLogs(); };
+    if ($('ai-token')) $('ai-token').addEventListener('paste', () => setTimeout(async () => {
       const token = $('ai-token').value.trim(); if (token.length < 8) return;
       try {
         const j = await fetch('/api/settings/peek-token', { method: 'POST', headers: JSONH, body: JSON.stringify({ token, pin: $('ai-pin').value }) }).then(r => r.json());
         if (j.suggested_provider) $('ai-provider').value = j.suggested_provider;
       } catch (e) {}
     }, 30));
-    $('ai-remove').onclick = async () => { await fetch('/ai/key/clear', { method: 'POST', headers: JSONH, body: JSON.stringify({ pin: $('ai-pin').value }) }).catch(() => {}); await status(); closeModal(); };
-    $('ai-token').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); save(); } });
-    modal.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); closeModal(); } });
-    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
-    $('ai-send').onclick = ask; $('ai-in').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ask(); } });
     status();
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();   // works whatever the script order
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
+
