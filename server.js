@@ -306,12 +306,6 @@ app.use(express.static('public'));
 const APP_VERSION = (() => { try { return require('./package.json').version || '0.0.0'; } catch (e) { return '0.0.0'; } })();
 // SoloHost Feedback Hub: built-in defaults (no .env needed); SHFH_* env variables override them.
 // The ingest token is a *client* token by design of the Hub SDK: any browser that opens the game can see it. Rotate it on the Hub if abused.
-const SHFH = { hubId: 'SHFH-CANNOI-0905428801', hubUrl: 'http://14.176.78.46:8090', ingestToken: 'cannoi_7Kp9xV2mQ8rN4tY6cL3wA5zD1eF0uH9' };
-app.get('/api/shfh-config', (req, res) => {
-  const hubUrl = String(process.env.SHFH_HUB_URL || SHFH.hubUrl).replace(/\/+$/, '');
-  res.json({ hubId: process.env.SHFH_HUB_ID || SHFH.hubId, hubUrl, formUrl: hubUrl + '/feedback', ingestToken: process.env.SHFH_INGEST_TOKEN != null ? process.env.SHFH_INGEST_TOKEN : SHFH.ingestToken,
-    appId: process.env.SHFH_APP_ID || 'snake-arcade', appName: process.env.SHFH_APP_NAME || 'Snake Arcade', version: APP_VERSION, platform: 'solohost', enabled: process.env.SHFH_ENABLED !== '0' });
-});
 let publicIp = '';
 let advertisedPort = '';   // last public/host port seen on a real request (SoloHost), NEVER the internal container PORT
 const APP_ID = process.env.SHFH_APP_ID || process.env.APP_ID || 'imported-zip-snake-classic-projectzip-k19m';
@@ -363,9 +357,18 @@ setInterval(refreshPublicIp, 45000);
 refreshPublicIp();
 app.get('/api/info', (q, res) => res.json(hostInfo(q)));
 app.get('/health', (q, s) => s.status(200).send('OK'));
-let aiApi = null;
-// AI + Feedback flow replaced by calculator-style gateway (lib/snake-ai-routes.js). Old ai-bridge / provider-hub-bridge not mounted.
-try { require('./lib/snake-ai-routes').mount(app); } catch (e) { console.error('snake-ai-routes skip', e.message); }
+const adapter = require('./lib/app-adapter');
+const { createAIService } = require('./lib/ai-module/ai-service');
+const { mountAIRoutes } = require('./lib/ai-module/routes');
+const { createFeedbackService, mountFeedbackRoutes } = require('./lib/feedback-module/feedback-service');
+const ai = createAIService({ dataDir: require('path').join(__dirname, 'data'), appName: 'Snake Arcade', adapter });
+mountAIRoutes(app, ai);
+const fbOpts = { appId: 'snake-arcade', appName: 'Snake Arcade', version: APP_VERSION };
+if (process.env.SHFH_HUB_ID) fbOpts.hubId = process.env.SHFH_HUB_ID;
+if (process.env.SHFH_HUB_URL) fbOpts.baseUrl = process.env.SHFH_HUB_URL;
+if (process.env.SHFH_INGEST_TOKEN) fbOpts.ingestToken = process.env.SHFH_INGEST_TOKEN;
+const fb = createFeedbackService(fbOpts);
+mountFeedbackRoutes(app, fb);
 
 const humansOf = room => [...room.players.values()].filter(p => !p.bot);
 function rehost(room) { const on = humansOf(room).filter(p => !p.off); if (on.length && !on.some(p => p.id === room.host)) room.host = on[0].id; }

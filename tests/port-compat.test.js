@@ -39,9 +39,8 @@ async function run(env, label) {
   ok('/health body OK', (await get(any, '/health')).body === 'OK');
   const page = await get(any, '/'); ok('GET / serves the game page', page.code === 200 && /Snake Arcade/.test(page.body) && /text\/html/.test(page.type));
   ok('static assets served', (await get(any, '/game.js')).code === 200 && (await get(any, '/ai-panel.js')).code === 200);
-  ok('/api/shfh-config answers', (() => { return true; })());
-  const cfg = JSON.parse((await get(any, '/api/shfh-config')).body); ok('shfh-config has appId/version', cfg.appId === 'snake-arcade' && /^\d+\.\d+\.\d+$/.test(cfg.version) && cfg.platform === 'solohost');
-  ok('built-in Hub parameters need no declaration', cfg.hubId === 'SHFH-CANNOI-0905428801' && cfg.hubUrl === 'http://14.176.78.46:8090' && cfg.formUrl === 'http://14.176.78.46:8090/feedback' && cfg.ingestToken === 'cannoi_7Kp9xV2mQ8rN4tY6cL3wA5zD1eF0uH9' && cfg.enabled === true);
+  const cfg = JSON.parse((await get(any, '/api/feedback/config')).body); ok('feedback config has appId and no token', cfg.appId === 'snake-arcade' && cfg.hubId === 'SHFH-CANNOI-0905428801' && !('ingestToken' in cfg) && !JSON.stringify(cfg).includes('cannoi_'));
+  const st = JSON.parse((await get(any, '/api/ai/status')).body); ok('ai status answers', st && typeof st.configured === 'boolean');
   const publicPort = 31877;                                   // a different "public" port than the container port, like a SoloHost mapping
   const info = JSON.parse((await get(any, '/api/info', { Host: '192.168.1.50:' + publicPort })).body);
   ok('invite URLs follow the PUBLIC port the browser used', info.publicUrl === 'http://192.168.1.50:' + publicPort && info.lanUrls.every(u => u.endsWith(':' + publicPort)) && info.port === any);
@@ -51,7 +50,7 @@ async function run(env, label) {
   await a.stop();
   // env overrides the built-in Hub values
   const op = await freePort(); const o = await run({ PORT: String(op), SHFH_HUB_URL: 'http://hub.lan:9000/', SHFH_INGEST_TOKEN: 'mine', SHFH_ENABLED: '0' });
-  const oc = JSON.parse((await get(op, '/api/shfh-config')).body); ok('SHFH_* env overrides built-in values', oc.hubUrl === 'http://hub.lan:9000' && oc.formUrl === 'http://hub.lan:9000/feedback' && oc.ingestToken === 'mine' && oc.enabled === false); await o.stop();
+  const oc = JSON.parse((await get(op, '/api/feedback/config')).body); ok('feedback config never returns ingest token', oc.hubId && !('ingestToken' in oc) && !JSON.stringify(oc).includes('mine')); await o.stop();
   // B) no PORT => internal default 8080
   const b = await run({}); if (b.up) { ok('default internal port is 8080', (await get(8080, '/health')).code === 200); } else if (/EADDRINUSE/.test(b.out())) console.log('note: 8080 busy on this machine, default-port check skipped'); else ok('default 8080 start: ' + b.out().slice(0, 200), false);
   await b.stop();

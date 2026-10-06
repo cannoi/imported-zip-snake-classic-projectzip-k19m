@@ -14,7 +14,7 @@ function express() {
   };
   app.use = fn => { stack.push(fn); return app; }; app.set = () => app; app.disable = () => app;
   const route = method => (p, h) => { stack.push((req, res, next) => (req.method === method && req.path === p) ? h(req, res, next) : next()); return app; };
-  app.get = route('GET'); app.post = route('POST');
+  app.get = route('GET'); app.post = route('POST'); app.delete = route('DELETE');
   return app;
 }
 express.json = () => (req, res, next) => {
