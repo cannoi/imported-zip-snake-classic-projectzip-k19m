@@ -126,7 +126,7 @@
   </div>
 
   <!-- Unified AI Panel: Chat | Feedback | Settings | Logs -->
-  <div class="panel-overlay" id="aiOverlay" hidden>
+  <div class="panel-overlay" id="aiOverlay" hidden style="z-index:400">
     <div class="panel ai-panel" id="aiPanel">
       <div class="panel-header">
         <span class="panel-title">✦ AI</span>
@@ -180,7 +180,18 @@
       <div class="tab-pane" id="tab-settings">
         <div class="panel-body settings-body">
           <label class="fb-label">Provider</label>
-          <select id="setProvider"></select>
+          <select id="setProvider">
+            <option value="none">— None —</option>
+            <option value="openai">OpenAI</option>
+            <option value="gemini">Google Gemini</option>
+            <option value="deepseek">DeepSeek</option>
+            <option value="anthropic">Anthropic</option>
+            <option value="openrouter">OpenRouter</option>
+            <option value="groq">Groq</option>
+            <option value="mistral">Mistral</option>
+            <option value="xai">xAI</option>
+            <option value="custom">Custom OpenAI-compatible</option>
+          </select>
           <label class="fb-label">API Key</label>
           <input type="password" id="setApiKey" placeholder="sk-… (không hiện lại sau khi lưu)" autocomplete="off">
           <p class="fb-hint" id="setKeyHint">Key hiện tại: (chưa có)</p>

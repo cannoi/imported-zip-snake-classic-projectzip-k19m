@@ -858,3 +858,19 @@ input.field{-webkit-user-select:text;user-select:text}
   button { height: 50px; font-size: 1.1rem; }
   .tab { font-size: 0.7rem; }
 }
+
+/* AI panel fixes — above game chrome, selectable provider, readable chat */
+.panel-overlay { z-index: 400 !important; }
+.ai-fab { z-index: 410 !important; }
+.panel.ai-panel { position: relative; z-index: 401; color: #eee; }
+.settings-body select, .fb-body select, #setProvider, #setModel, #setApiKey, #setBaseUrl {
+  width: 100%; min-height: 40px; pointer-events: auto; user-select: text;
+  -webkit-user-select: text; background: #120f22; color: #fff; border: 1px solid #445;
+  border-radius: 8px; padding: 8px; font-size: 14px; appearance: auto;
+}
+#tab-chat.tab-pane.active { display: flex; min-height: 220px; }
+#aiChat { min-height: 160px; color: #eee; }
+.msg { color: #eee; background: #241e3a; border-radius: 10px; padding: 8px 10px; margin: 6px 0; }
+.msg.user { background: #16324a; }
+.fb-acc { margin: 6px 0; }
+.fb-val { display: block; word-break: break-all; user-select: text; -webkit-user-select: text; }

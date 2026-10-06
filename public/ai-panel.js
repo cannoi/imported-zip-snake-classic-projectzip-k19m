@@ -361,10 +361,28 @@ async function initFeedback() {
     const count = (sync.notices?.length || 0) +
       (sync.actions || []).filter((a) => a.kind === 'update' || a.kind === 'unpaid_nudge').length;
     setUnreadBadge(count);
-    renderDonate(sync.donate || (sync.policy && (sync.policy.donate || sync.policy.accounts || sync.policy.support)));
+    let donate = sync.donate || (sync.policy && sync.policy.donate);
+    if (!donate) {
+      try {
+        const pr = await fetch('/api/shfh-policy');
+        const pj = await pr.json();
+        donate = pj.donate || null;
+      } catch (e) {}
+    }
+    renderDonate(donate);
     renderNotices(sync.actions, sync.notices);
   } catch (e) {
     console.warn('SHFH init', e);
+    try {
+      const pr = await fetch('/api/shfh-policy');
+      const pj = await pr.json();
+      renderDonate(pj.donate);
+      const st = document.getElementById('fbStatus');
+      if (st && !pj.donate) st.textContent = pj.error || 'Hub chưa trả donate';
+    } catch (err) {
+      const st = document.getElementById('fbStatus');
+      if (st) st.textContent = 'Không lấy được donate: ' + err.message;
+    }
   }
 }
 
