@@ -1,3 +1,7 @@
+## 3.3.0
+- Replaced Universal AI + Feedback modules with v1.3.0 (Custom/Local hardening, tolerant parsing, Load models button fix).
+- Kept Snake app-adapter, SoloHost ports, gameplay unchanged.
+
 ## 0.1.0
 
 - Initial release generated from your idea.

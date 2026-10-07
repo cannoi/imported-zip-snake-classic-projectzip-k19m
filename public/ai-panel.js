@@ -1,4 +1,9 @@
 'use strict';
+/**
+ * Reference AI panel controller (from Snake Arcade).
+ * Host app may copy to public/ai-panel.js and adapt gameContext() / executeActions().
+ * Depends on: UniversalAI, UniversalFeedback, markup in example/ui/ai-panel.html, styles in ai-panel.css.
+ */
 function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
@@ -55,6 +60,7 @@ function setFabVisible(visible) {
   fab.style.display = visible ? '' : 'none';
 }
 function gameContext() {
+  // HOST: return non-secret live state for AI (screen, selection, score…).
   let code = '', score = null, mode = '';
   try {
     if (typeof room !== 'undefined' && room) { code = room.code || ''; mode = room.mode || ''; }
@@ -240,7 +246,7 @@ document.getElementById('setTest')?.addEventListener('click', async () => {
     if (r.ok) {
       const models = r.models || [];
       fillModelSelect(models, r.model || 'auto');
-      if (status) status.textContent = 'Token OK. Models: ' + models.slice(0, 6).map(m => m.id || m).join(', ');
+      if (status) status.textContent = 'Token OK' + (r.model ? ' · model: ' + r.model : '') + (models.length ? '. Models: ' + models.slice(0, 6).map(m => m.id || m).join(', ') : '. (server lists no models)') + (r.warning ? ' ⚠ ' + r.warning : '');
     } else {
       if (status) status.textContent = r.warning || r.error || 'Token check failed';
       if (r.suggested_provider) {
@@ -253,17 +259,19 @@ document.getElementById('setTest')?.addEventListener('click', async () => {
   }
 });
 
-document.getElementById('setRefreshModels')?.addEventListener('click', async () => {
+async function refreshModelsClick() {
   const status = document.getElementById('setStatus');
   if (status) status.textContent = 'Refreshing models…';
   try {
     const r = await ai.models();
     fillModelSelect(r.models || r || [], document.getElementById('setModel')?.value || 'auto');
-    if (status) status.textContent = 'Models updated';
+    if (status) status.textContent = r.warning || 'Models updated';
   } catch (e) {
     if (status) status.textContent = e.message;
   }
-});
+}
+// HTML button is id="setModels"; keep the legacy id working too.
+['setModels', 'setRefreshModels'].forEach(id => document.getElementById(id)?.addEventListener('click', refreshModelsClick));
 
 async function loadLogs() {
   const view = document.getElementById('logsView');
